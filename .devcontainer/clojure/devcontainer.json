@@ -1,0 +1,66 @@
+{
+    "name": "Clojure Development",
+
+    // Build configuration
+    "dockerComposeFile": [
+        "../../docker-compose.yml",
+        "../docker-compose.dev.yml"
+    ],
+    "service": "clojure",
+
+    // VS Code specific settings
+    "customizations": {
+        "vscode": {
+            // Terminal settings
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "terminal.integrated.profiles.linux": {
+                    "bash": {
+                        "path": "/bin/bash"
+                    }
+                }
+            },
+            "[clojure]": {
+                // "editor.defaultFormatter": "shaunlebron.vscode-parinfer",
+                // "parinfer.mode": "smart",
+                // "editor.autoClosingBrackets": "never",
+                // "editor.autoClosingOvertype": "never",
+                // "editor.formatOnPaste": false,
+                // "editor.formatOnType": true
+            },
+            "calva.paredit.defaultKeyMap": "original",
+
+            // Extensions
+            "extensions": [
+                "betterthantomorrow.calva",
+                // "betterthantomorrow.calva-spritz",
+                "shaunlebron.vscode-parinfer"
+            ],
+            // Keybindings
+            "keybindings": [
+                {
+                //   "key": "ctrl+shift+alt+l",
+                //   "command": "editor.action.formatDocument",
+                //   "when": "editorHasDocumentFormattingProvider && editorTextFocus && !editorReadonly && !inCompositeEditor"
+                }
+            ]
+        }
+    },
+
+    // Forward ports 1971 for clay
+    "forwardPorts": [],
+
+    // User configuration
+    "remoteUser": "vscode",
+    "updateRemoteUserUID": true,
+
+    // Container runtime arguments
+    "workspaceFolder": "/workspace",
+
+    "hostRequirements": {
+        "gpu": "optional"
+    },
+
+    // pre-installs all clojure dependencies
+    "postCreateCommand": "echo 'export DISPLAY=host.docker.internal:0' >> ~/.bashrc && quarto check install"
+}

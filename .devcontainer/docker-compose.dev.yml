@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  python:
+    build:
+      context: ./.devcontainer/python
+      dockerfile: python.Dockerfile
+    container_name: python-dev
+    volumes:
+      - .:/workspace:cached
+    environment:
+      - PYTHONPATH=/workspace/src/python
+      - JUPYTER_PATH=/workspace/notebooks
+
+  clojure:
+    build:
+      context: ./.devcontainer/clojure
+      dockerfile: clojure.Dockerfile
+    container_name: clojure-dev
+    volumes:
+      - .:/workspace:cached
+    environment:
+      - CLOJURE_DEPS=/workspace/deps.edn
+
+  # latex:
+  #   build:
+  #     context: ./.devcontainer/latex
+  #     dockerfile: latex.Dockerfile
+  #   container_name: latex-dev
+  #   volumes:
+  #     - .:/workspace:cached
+  #   environment:
+  #     - TEXMFHOME=/workspace/.texmf

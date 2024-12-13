@@ -1,0 +1,10 @@
+{
+ :remote-repo {:git-url "https://github.com/adabwana/f24-cs7300-final" :branch "master"}
+;;  :subdirs-to-sync ["notebooks" "data" "images"]
+ :run-quarto true
+ :quarto {:highlight-style :atom-one ;:gruvbox
+          :format
+          {:html {:toc true
+                  :toc-depth 3
+                  :theme :united ; :journal
+                  :number-sections false}}}}

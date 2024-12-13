@@ -1,0 +1,47 @@
+{
+    "name": "Python Development",
+
+    // Build configuration
+    "dockerComposeFile": [
+        "../../docker-compose.yml",
+        "../docker-compose.dev.yml"
+    ],
+    "service": "python",
+
+    // VS Code specific settings
+    "customizations": {
+        "vscode": {
+            // Terminal settings
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "terminal.integrated.profiles.linux": {
+                    "bash": {
+                        "path": "/bin/bash"
+                    }
+                }
+            },
+            // Extensions
+            "extensions": [
+                "ms-python.python",
+                "ms-toolsai.jupyter",
+                "ms-python.vscode-pylance",
+                "ms-toolsai.datawrangler"
+            ]
+        }
+    },
+
+    // User configuration
+    "remoteUser": "vscode",
+    "updateRemoteUserUID": true,
+
+    // // Container runtime arguments
+    // "runArgs": [
+    //     "--gpus=all"
+    // ],
+    
+    // Workspace configuration
+    "workspaceFolder": "/workspace",
+    "mounts": [
+        "source=${localWorkspaceFolder},target=/workspace,type=bind"
+    ]
+}

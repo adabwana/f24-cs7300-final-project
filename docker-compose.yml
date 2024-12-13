@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  python:
+    build:
+      context: ./.devcontainer/python
+      dockerfile: python.Dockerfile
+    volumes:
+      - .:/workspace:cached
+    command: sleep infinity
+
+  clojure:
+    build:
+      context: ./.devcontainer/clojure
+      dockerfile: clojure.Dockerfile
+    volumes:
+      - .:/workspace:cached
+    command: sleep infinity
+    # Container runtime arguments
+    network_mode: host
+    environment:
+      - DISPLAY=
+      - JAVA_TOOL_OPTIONS=-Djava.awt.headless=true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # latex:
+  #   build:
+  #     context: ./.devcontainer/latex
+  #     dockerfile: latex.Dockerfile
+  #   volumes:
+  #     - .:/workspace:cached
+  #   command: sleep infinity
+
+networks:
+  default:
+    name: my_network

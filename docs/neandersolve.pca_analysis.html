@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.39">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>PCA: The Clojure Way – CS7300: Final Project</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./notebooks/conclusion.html" rel="next">
+<link href="./notebooks/python/pca-example.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-e8fb9d25728d58bfeac61b497e4a6629.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-b9a39a4f8b80894864a6c4bb32d07bac.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./neandersolve.pca_analysis.html"><span class="chapter-title">PCA: The Clojure Way</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">CS7300: Final Project</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Jaryt Salvo</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./neandersolve.descriptive.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Descriptive Statistics</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./neandersolve.eigen.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Eigenvalues and Eigenvectors</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./neandersolve.pca.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Principal Component Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./notebooks/python/pca-example.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">PCA Baseline: Python</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./neandersolve.pca_analysis.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">PCA: The Clojure Way</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./notebooks/conclusion.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Conclusion</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#data-preparation-and-representation" id="toc-data-preparation-and-representation" class="nav-link active" data-scroll-target="#data-preparation-and-representation">Data Preparation and Representation</a></li>
+  <li><a href="#core-pca-implementation" id="toc-core-pca-implementation" class="nav-link" data-scroll-target="#core-pca-implementation">Core PCA Implementation</a></li>
+  <li><a href="#data-transformation-and-visualization" id="toc-data-transformation-and-visualization" class="nav-link" data-scroll-target="#data-transformation-and-visualization">Data Transformation and Visualization</a>
+  <ul class="collapse">
+  <li><a href="#understanding-sign-differences-in-principal-components" id="toc-understanding-sign-differences-in-principal-components" class="nav-link" data-scroll-target="#understanding-sign-differences-in-principal-components">Understanding Sign Differences in Principal Components</a></li>
+  </ul></li>
+  <li><a href="#feature-contribution-analysis" id="toc-feature-contribution-analysis" class="nav-link" data-scroll-target="#feature-contribution-analysis">Feature Contribution Analysis</a></li>
+  <li><a href="#variance-analysis" id="toc-variance-analysis" class="nav-link" data-scroll-target="#variance-analysis">Variance Analysis</a></li>
+  <li><a href="#validation-against-python-implementation" id="toc-validation-against-python-implementation" class="nav-link" data-scroll-target="#validation-against-python-implementation">Validation Against Python Implementation</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">PCA: The Clojure Way</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="neandersolve.pca_analysis_files/md-default2.js" type="text/javascript"></script>
+<script src="neandersolve.pca_analysis_files/md-default3.js" type="text/javascript"></script>
+<script src="neandersolve.pca_analysis_files/vega4.js" type="text/javascript"></script>
+<script src="neandersolve.pca_analysis_files/vega5.js" type="text/javascript"></script>
+<script src="neandersolve.pca_analysis_files/vega6.js" type="text/javascript"></script>
+<script src="neandersolve.pca_analysis_files/plotly7.js" type="text/javascript"></script>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> neandersolve.pca-analysis</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:require</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>   [tablecloth.api <span class="at">:as</span> tc]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>   [scicloj.tableplot.v1.hanami <span class="at">:as</span> hanami]</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>   [scicloj.tableplot.v1.plotly <span class="at">:as</span> plotly]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>   [neandersolve.pca <span class="at">:as</span> pca]</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>   [neandersolve.utils.tc-helpers <span class="at">:as</span> tc-helpers]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="data-preparation-and-representation" class="level2">
+<h2 class="anchored" data-anchor-id="data-preparation-and-representation">Data Preparation and Representation</h2>
+<p>The foundation of any <em>PCA implementation</em> lies in its data preparation. While scikit-learn abstracts this process through implicit transformations, our Clojure approach emphasizes <em>explicit control</em> and <em>functional composition</em>.</p>
+<p>In contrast to Python’s approach, our implementation provides fine-grained control over each transformation step. We begin with data loading that enforces consistent Clojure naming conventions of <em>kebab-case</em> keywords as column names:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> iris</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  (tc/dataset <span class="st">"data/iris.csv"</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>              {<span class="at">:key-fn</span> (<span class="kw">fn</span> [colname]</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                         (<span class="kw">-&gt;</span> colname</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                             (clojure.string/replace <span class="ss">#"\.|\s"</span> <span class="st">"-"</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                             clojure.string/lower-case</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                             <span class="kw">keyword</span>))}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The <code>key-fn</code> transformation ensures Clojurian naming conventions. By replacing spaces and dots with hyphens, converting to lowercase, and using keywords, we establish the <em>kebab-case</em> keyword naming convention.</p>
+<p>Next, we convert the dataset to a matrix format to prepare for our <em>Neanderthal</em> PCA implementation:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> iris-matrix</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (tc-helpers/dataset-&gt;matrix</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>   (tc/drop-columns iris [<span class="at">:variety</span>])))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="core-pca-implementation" class="level2">
+<h2 class="anchored" data-anchor-id="core-pca-implementation">Core PCA Implementation</h2>
+<p>Our <strong>PCA implementation</strong> diverges fundamentally from <code>scikit-learn</code>’s <em>black-box approach</em>. Where <code>scikit-learn</code> combines fitting and transformation into a single operation, we deliberately <em>separate</em> these concerns for clarity and flexibility:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> iris_data.iloc[:, :<span class="dv">4</span>]  <span class="co"># Select all rows and first 4 columns</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> iris_data[<span class="st">'variety'</span>]</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Standardize the features</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>scaler <span class="op">=</span> StandardScaler()</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>X_scaled <span class="op">=</span> scaler.fit_transform(X)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Perform PCA</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>pca <span class="op">=</span> PCA()</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>X_pca <span class="op">=</span> pca.fit_transform(X_scaled)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> perform-pca </span>[X]</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [pca-result (pca/pca-fit X <span class="va">true</span> <span class="va">true</span>)  <span class="co">; center and scale the data</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        transformed (pca/transform X pca-result)]</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">assoc</span> pca-result <span class="at">:transformed</span> transformed)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(perform-pca iris-matrix)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:components</span> #RealGEMatrix[<span class="kw">float</span>, mxn<span class="at">:4x4</span>, layout<span class="at">:column</span>]</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>   ▥       ↓       ↓       ↓       ↓       ┓    </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>   →       <span class="fl">0.52</span>   -<span class="fl">0.38</span>   -<span class="fl">0.72</span>    <span class="fl">0.26</span>         </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>   →      -<span class="fl">0.27</span>   -<span class="fl">0.92</span>    <span class="fl">0.24</span>   -<span class="fl">0.12</span>         </span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>   →       <span class="fl">0.58</span>   -<span class="fl">0.02</span>    <span class="fl">0.14</span>   -<span class="fl">0.80</span>         </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>   →       <span class="fl">0.56</span>   -<span class="fl">0.07</span>    <span class="fl">0.63</span>    <span class="fl">0.52</span>         </span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>   ┗                                       ┛    </span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>, <span class="at">:explained</span>_variance #RealBlockVector[<span class="kw">float</span>, n<span class="at">:4</span>, stride<span class="at">:1</span>]</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>[   <span class="fl">2.92</span>    <span class="fl">0.91</span>    <span class="fl">0.15</span>    <span class="fl">0.02</span> ]</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>, <span class="at">:explained</span>_variance_ratio #RealBlockVector[<span class="kw">float</span>, n<span class="at">:4</span>, stride<span class="at">:1</span>]</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>[.<span class="dv">73</span>     .<span class="dv">23</span>     <span class="fl">3.67E-2</span> <span class="fl">5.18E-3</span> ]</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>, <span class="at">:means</span> #RealBlockVector[<span class="kw">float</span>, n<span class="at">:4</span>, stride<span class="at">:1</span>]</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>[   <span class="fl">5.84</span>    <span class="fl">3.06</span>    <span class="fl">3.76</span>    <span class="fl">1.20</span> ]</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>, <span class="at">:scale</span> #RealBlockVector[<span class="kw">float</span>, n<span class="at">:4</span>, stride<span class="at">:1</span>]</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>[   <span class="fl">0.83</span>    <span class="fl">0.44</span>    <span class="fl">1.77</span>    <span class="fl">0.76</span> ]</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>, <span class="at">:transformed</span> #RealGEMatrix[<span class="kw">float</span>, mxn<span class="at">:150x4</span>, layout<span class="at">:column</span>]</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>   ▥       ↓       ↓       ↓       ↓       ┓    </span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>   →      -<span class="fl">2.26</span>   -<span class="fl">0.48</span>   -<span class="fl">0.13</span>    <span class="fl">0.02</span>         </span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>   →      -<span class="fl">2.07</span>    <span class="fl">0.67</span>   -<span class="fl">0.23</span>    <span class="fl">0.10</span>         </span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>   →       ⁙       ⁙       ⁙       ⁙            </span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>   →       <span class="fl">1.37</span>   -<span class="fl">1.01</span>    <span class="fl">0.93</span>    <span class="fl">0.03</span>         </span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>   →       <span class="fl">0.96</span>    <span class="fl">0.02</span>    <span class="fl">0.53</span>   -<span class="fl">0.16</span>         </span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>   ┗                                       ┛    </span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This separation provides:</p>
+<ul>
+<li><strong>Independent access</strong> to model <em>parameters</em> and <em>transformed data</em></li>
+<li>Ability to transform new data <em>without refitting</em></li>
+<li><strong>Explicit control</strong> over centering and scaling decisions</li>
+<li><strong>Clear separation</strong> between <em>model creation</em> and <em>data transformation</em></li>
+</ul>
+</section>
+<section id="data-transformation-and-visualization" class="level2">
+<h2 class="anchored" data-anchor-id="data-transformation-and-visualization">Data Transformation and Visualization</h2>
+<p>The transformation of PCA results into visualizable form reveals another key distinction in our approach. Rather than relying on direct array manipulation as in Python, we maintain <em>data context</em> throughout the analysis pipeline:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> pcas-iris</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">-&gt;</span> (<span class="at">:transformed</span> (perform-pca iris-matrix))</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>      (tc-helpers/matrix-&gt;dataset)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>      (tc/rename-columns {<span class="at">:x1</span> <span class="at">:pc1</span> <span class="at">:x2</span> <span class="at">:pc2</span> <span class="at">:x3</span> <span class="at">:pc3</span> <span class="at">:x4</span> <span class="at">:pc4</span>})))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This transformation preserves column semantics through meaningful names while maintaining clear data provenance. Our visualization approach emphasizes <em>declarative specifications</em> over imperative commands:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> pcas-iris</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    (tc/add-column <span class="at">:variety</span> (tc/column iris <span class="at">:variety</span>))</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    (hanami/plot hanami/point-chart</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                 {:=x <span class="at">:pc1</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>                  :=y <span class="at">:pc2</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>                  :=color <span class="at">:variety</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>                  :=mark-size <span class="dv">100</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div><script>vegaEmbed(document.currentScript.parentElement, {"encoding":{"color":{"field":"variety","type":"nominal"},"x":{"field":"pc1","type":"quantitative"},"y":{"field":"pc2","type":"quantitative"}},"usermeta":{"embedOptions":{"renderer":"svg"}},"mark":{"type":"circle","size":100,"tooltip":true},"width":400,"background":"floralwhite","height":300,"data":{"url":"neandersolve.pca_analysis_files\/0.csv","format":{"type":"csv"}}});</script></div>
+<p>This declarative and layering style (akin to R’s <code>ggplot2</code>) contrasts sharply with matplotlib’s imperative approach:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span> (<span class="dv">10</span>, <span class="dv">6</span>))</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>categories <span class="op">=</span> pd.Categorical(y).codes</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>scatter <span class="op">=</span> plt.scatter(X_pca[:, <span class="dv">0</span>], X_pca[:, <span class="dv">1</span>], c<span class="op">=</span>categories, cmap<span class="op">=</span><span class="st">'viridis'</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="ss">f'PC1 (</span><span class="sc">{</span>pca<span class="sc">.</span>explained_variance_ratio_[<span class="dv">0</span>]<span class="sc">:.1%}</span><span class="ss"> variance explained)'</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="ss">f'PC2 (</span><span class="sc">{</span>pca<span class="sc">.</span>explained_variance_ratio_[<span class="dv">1</span>]<span class="sc">:.1%}</span><span class="ss"> variance explained)'</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'PCA of Iris Dataset'</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>plt.legend(scatter.legend_elements()[<span class="dv">0</span>], y.unique())</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/python-pca-plot.jpg" class="img-fluid figure-img"></p>
+<figcaption>Python’s PCA Plot</figcaption>
+</figure>
+</div>
+<section id="understanding-sign-differences-in-principal-components" class="level3">
+<h3 class="anchored" data-anchor-id="understanding-sign-differences-in-principal-components">Understanding Sign Differences in Principal Components</h3>
+<p>A key observation when comparing our PCA implementation with scikit-learn’s is that <em>PC2</em> often shows opposite signs. This is not an error, but rather a fundamental property of <em>eigendecomposition</em>. The direction of eigenvectors is arbitrary – both <span class="math inline">\(\mathbf{v}\)</span> and <span class="math inline">\(-\mathbf{v}\)</span> are valid eigenvectors for the same eigenvalue.</p>
+<p>In our implementation, the sign of PC2 comes from our <em>QR iteration</em> algorithm, while scikit-learn uses a different algorithm (LAPACK’s DGESVD). Neither is “wrong” – they’re both valid <em>orthogonal bases</em> that explain the same amount of variance.</p>
+<p>The key properties that remain invariant regardless of sign:</p>
+<ol type="1">
+<li><em>Orthogonality</em> between components</li>
+<li>Amount of <em>variance explained</em></li>
+<li><em>Relative distances</em> between points</li>
+<li><em>Clustering patterns</em> in the transformed space</li>
+</ol>
+</section>
+</section>
+<section id="feature-contribution-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="feature-contribution-analysis">Feature Contribution Analysis</h2>
+<p>When creating <em>biplots</em>, the sign difference affects the direction of feature vectors, but not their relative angles or magnitudes. Both representations are equally valid for interpretation.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> component-arrows</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [components (<span class="kw">-&gt;</span> (<span class="at">:components</span> (perform-pca iris-matrix))</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>                       (tc-helpers/matrix-&gt;dataset))</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>        scale-factor <span class="fl">5.0</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>        labels [<span class="at">:sepal-length</span> <span class="at">:sepal-width</span> <span class="at">:petal-length</span> <span class="at">:petal-width</span>]]</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">-&gt;&gt;</span> (<span class="kw">range</span> (<span class="kw">count</span> labels))</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">map</span> (<span class="kw">fn</span> [i]</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>                {<span class="at">:label</span> (<span class="kw">nth</span> labels i)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>                 <span class="at">:x0</span> <span class="dv">0</span>  <span class="at">:y0</span> <span class="dv">0</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>                 <span class="at">:x1</span> (<span class="kw">*</span> scale-factor (<span class="kw">nth</span> (components <span class="at">:x1</span>) i))  <span class="co">; PC1 loading</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>                 <span class="at">:y1</span> (<span class="kw">*</span> scale-factor (<span class="kw">nth</span> (components <span class="at">:x2</span>) i))}))  <span class="co">; PC2 loading</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>         (tc/dataset))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The <em>biplot</em> combines both the transformed data points and feature vectors, providing a comprehensive view of the PCA results:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> pcas-iris</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    (tc/add-column <span class="at">:variety</span> (tc/column iris <span class="at">:variety</span>))</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    (plotly/layer-point</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>     {:=x <span class="at">:pc1</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>      :=y <span class="at">:pc2</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>      :=color <span class="at">:variety</span>})</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    (plotly/update-data (<span class="kw">fn</span> [_] component-arrows))</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    (plotly/layer-segment</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>     {:=x0 <span class="at">:x0</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>      :=y0 <span class="at">:y0</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>      :=x1 <span class="at">:x1</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>      :=y1 <span class="at">:y1</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">;;   :=color :label</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>      :=mark-color <span class="at">:red</span>})</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    (plotly/layer-text</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>     {:=x <span class="at">:x1</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>      :=y <span class="at">:y1</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>      :=text <span class="at">:label</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:400px;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+              [{"y":[-0.4784255027770996,0.6718810200691223,0.34076470136642456,0.5953983664512634,-0.6446771621704102,-1.4842073917388916,-0.04748706519603729,-0.22240488231182098,1.1116018295288086,0.46744608879089355,-1.0402076244354248,-0.13263602554798126,0.7262415289878845,0.9582945704460144,-1.8538483381271362,-2.6773173809051514,-1.4786577224731445,-0.48720782995224,-1.4003291130065918,-1.1240853071212769,-0.4074924886226654,-0.9210377335548401,-0.4568147659301758,-0.08527447283267975,-0.13679823279380798,0.6235280632972717,-0.2413569539785385,-0.5253910422325134,-0.3121737539768219,0.33660247921943665,0.5028545260429382,-0.42228230834007263,-1.7875889539718628,-2.143548011779785,0.4586637616157532,0.20541752874851227,-0.6593508124351501,-0.5903167128562927,0.9011593461036682,-0.2679830491542816,-0.4402422308921814,2.3296093940734863,0.4774990975856781,-0.47075146436691284,-1.1384172439575195,0.7086768746376038,-1.1166902780532837,0.3849554657936096,-0.9946295619010925,-0.009187119081616402],"r":null,"name":"Setosa","marker":{"color":"#1B9E77"},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[-2.257141351699829,-2.0740127563476562,-2.356334924697876,-2.2917065620422363,-2.3818628787994385,-2.0687007904052734,-2.435868501663208,-2.2253918647766113,-2.3268449306488037,-2.177034378051758,-2.1590771675109863,-2.318363904953003,-2.211043119430542,-2.6243083477020264,-2.191399574279785,-2.254662036895752,-2.2002170085906982,-2.1830363273620605,-1.8922332525253296,-2.335545063018799,-1.9079312086105347,-2.199644088745117,-2.7650814056396484,-1.8125970363616943,-2.219726800918579,-1.945328950881958,-2.0443027019500732,-2.161336660385132,-2.1324198246002197,-2.257697820663452,-2.1329760551452637,-1.82547926902771,-2.606217384338379,-2.4380104541778564,-2.1029295921325684,-2.200437068939209,-2.038317918777466,-2.518893241882324,-2.4215197563171387,-2.162466287612915,-2.2788407802581787,-1.8519175052642822,-2.545111656188965,-1.9578884840011597,-2.1299235820770264,-2.062833309173584,-2.3767709732055664,-2.3863816261291504,-2.2220027446746826,-2.196475028991699],"text":null},{"y":[-0.8600931167602539,-0.5926315784454346,-0.6142417192459106,1.7485443353652954,0.20772328972816467,0.5913008451461792,-0.7704404592514038,1.8462419509887695,-0.03212059289216995,1.0305637121200562,2.645209312438965,0.06308168917894363,1.7588303089141846,0.18560056388378143,0.43753522634506226,-0.5073660016059875,0.19565407931804657,0.7894488573074341,1.6168253421783447,1.2982580661773682,-0.3952499330043793,0.41592511534690857,0.9302074313163757,0.41499561071395874,0.06319788843393326,-0.24995796382427216,0.07699619233608246,-0.3302075266838074,0.22517117857933044,1.0551820993423462,1.5570534467697144,1.5672231912612915,0.7746590375900269,0.6317246556282043,0.28681033849716187,-0.8427613973617554,-0.5203105211257935,1.3783692121505737,0.21876835823059082,1.3248841762542725,1.1162869930267334,-0.024841874837875366,0.9851019978523254,2.0124940872192383,0.8528710007667542,0.18058516085147858,0.38363268971443176,0.15435436367988586,1.5386356115341187,0.5968504548072815],"r":null,"name":"Versicolor","marker":{"color":"#D95F02"},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[1.0981022119522095,0.7288956046104431,1.2368358373641968,0.4061232805252075,1.071884036064148,0.3873898983001709,0.7440373301506042,-0.48569485545158386,0.9248034954071045,0.011388525366783142,-0.10982730984687805,0.4392222762107849,0.5602322220802307,0.7171595096588135,-0.03324315696954727,0.8724843263626099,0.34908249974250793,0.1582803577184677,1.2210036516189575,0.1643678843975067,0.7352198362350464,0.47469720244407654,1.230057954788208,0.630745530128479,0.7003152966499329,0.8713546395301819,1.2523140907287598,1.3538696765899658,0.6625809073448181,-0.04012373089790344,0.13035912811756134,0.023375047370791435,0.24073241651058197,1.0575522184371948,0.22323139011859894,0.427706241607666,1.0452263355255127,1.0410444736480713,0.06935619562864304,0.28253135085105896,0.27814674377441406,0.622484564781189,0.3354074954986572,-0.3609732389450073,0.28762301802635193,0.09105579555034637,0.22695665061473846,0.5744639039039612,-0.4461716413497925,0.2558736801147461],"text":null},{"y":[-0.8675176501274109,0.6965339183807373,-0.5601361393928528,0.04682813584804535,-0.294062077999115,-0.7977389097213745,1.5562868118286133,-0.41866546869277954,0.7090612053871155,-1.9145985841751099,-0.6904457807540894,0.42029014229774475,-0.41785213351249695,1.1583776473999023,0.440792441368103,-0.6739894151687622,-0.25477057695388794,-2.5481271743774414,-0.017723513767123222,1.7010445594787598,-0.9074299335479736,0.5698531270027161,-0.412261962890625,0.4802002012729645,-1.0105386972427368,-1.0044150352478027,0.31533607840538025,-0.06413339078426361,0.1867333948612213,-0.5604152679443359,-0.2584206759929657,-2.6175568103790283,0.17795105278491974,0.2919425070285797,0.8086045384407043,-0.853944718837738,-1.0650161504745483,-0.42102232575416565,-0.01716785505414009,-0.673872709274292,-0.6118381023406982,-0.6872751712799072,0.6965339183807373,-0.8646265864372253,-1.0456680059432983,-0.3856762647628784,0.8936906456947327,-0.2681729793548584,-1.0078805685043335,0.024248067289590836],"r":null,"name":"Virginica","marker":{"color":"#7570B3"},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[1.8384102582931519,1.154016137123108,2.197903633117676,1.4353424310684204,1.8615761995315552,2.742684841156006,0.3657931387424469,2.2947521209716797,1.9999868869781494,2.2522318363189697,1.3596206903457642,1.5973279476165771,1.877610683441162,1.2559082508087158,1.4627455472946167,1.584768295288086,1.466518759727478,2.418227195739746,3.2996416091918945,1.2595478296279907,2.030912399291992,0.9747158885002136,2.88797664642334,1.3287811279296875,1.6950550079345703,1.9478012323379517,1.1711803674697876,1.0175418853759766,1.7823790311813354,1.8574250936508179,2.4278204441070557,2.297231435775757,1.856484293937683,1.1104282140731812,1.1984589099884033,2.7894253730773926,1.5709929466247559,1.3417972326278687,0.9217373132705688,1.8458611965179443,2.0080831050872803,1.8954342603683472,1.154016137123108,2.033745050430298,1.9914753437042236,1.8642578125,1.5593571662902832,1.5160915851593018,1.3682039976119995,0.9574488401412964],"text":null},{"y":[0,-1.8870872259140015,null,0,-4.616478681564331,null,0,-0.12245919555425644,null,0,-0.3347109630703926,null],"r":null,"name":"","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"line":{"color":"red"},"lon":null,"lat":null,"x":[0,2.6053285598754883,null,0,-1.346738487482071,null,0,2.9020658135414124,null,0,2.824282646179199,null],"text":null},{"y":[-1.8870872259140015,-4.616478681564331,-0.12245919555425644,-0.3347109630703926],"r":null,"name":"","fill":null,"mode":"text","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[2.6053285598754883,-1.346738487482071,2.9020658135414124,2.824282646179199],"text":["sepal-length","sepal-width","petal-length","petal-width"]}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x1"},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y1"},"title":null}, {});</script></div>
+<p>Compare this with the Python notebook’s biplot:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> biplot(score, coef, labels<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    xs <span class="op">=</span> score[:,<span class="dv">0</span>]</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    ys <span class="op">=</span> score[:,<span class="dv">1</span>]</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> coef.shape[<span class="dv">0</span>]</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    plt.scatter(xs, ys, c<span class="op">=</span>pd.Categorical(y).codes, cmap<span class="op">=</span><span class="st">'viridis'</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>        plt.arrow(<span class="dv">0</span>, <span class="dv">0</span>, coef[i,<span class="dv">0</span>]<span class="op">*</span><span class="dv">5</span>, coef[i,<span class="dv">1</span>]<span class="op">*</span><span class="dv">5</span>, color<span class="op">=</span><span class="st">'r'</span>, alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> labels <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>            plt.text(coef[i,<span class="dv">0</span>]<span class="op">*</span><span class="fl">5.2</span>, coef[i,<span class="dv">1</span>]<span class="op">*</span><span class="fl">5.2</span>, <span class="ss">f'Var</span><span class="sc">{</span>i<span class="op">+</span><span class="dv">1</span><span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>            plt.text(coef[i,<span class="dv">0</span>]<span class="op">*</span><span class="fl">5.2</span>, coef[i,<span class="dv">1</span>]<span class="op">*</span><span class="fl">5.2</span>, labels[i])</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    plt.xlabel(<span class="st">'PC1'</span>)</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    plt.ylabel(<span class="st">'PC2'</span>)</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    plt.title(<span class="st">'PCA Biplot of Iris Dataset'</span>)</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    plt.grid()</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Create and show biplot</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>biplot(X_pca, pca.components_.T, X.columns)</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/python-biplot.jpg" class="img-fluid figure-img"></p>
+<figcaption>Python PCA Biplot</figcaption>
+</figure>
+</div>
+</section>
+<section id="variance-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="variance-analysis">Variance Analysis</h2>
+<p>The final step in PCA interpretation examines the <em>explained variance ratio</em>, revealing the effectiveness of our dimensionality reduction:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb14"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> [explained-var (<span class="kw">seq</span> (<span class="at">:explained</span>_variance_ratio (perform-pca iris-matrix)))]</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">-&gt;</span> (tc/dataset {<span class="at">:pc</span> (<span class="kw">range</span> <span class="dv">1</span> (<span class="kw">inc</span> (<span class="kw">count</span> explained-var)))</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">:explained-var</span> explained-var})</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>      (hanami/plot hanami/bar-chart</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>                   {:=x <span class="at">:pc</span> :=y <span class="at">:explained-var</span> :=mark-size <span class="dv">70</span>})))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div><script>vegaEmbed(document.currentScript.parentElement, {"encoding":{"x":{"field":"pc","type":"quantitative"},"y":{"field":"explained-var","type":"quantitative"}},"usermeta":{"embedOptions":{"renderer":"svg"}},"mark":{"type":"bar","size":70,"tooltip":true},"width":400,"background":"floralwhite","height":300,"data":{"url":"neandersolve.pca_analysis_files\/1.csv","format":{"type":"csv"}}});</script></div>
+<p>This visualization quantifies the trade-off between <em>dimensionality reduction</em> and <em>information retention</em>. The relative importance of each component guides decisions about the optimal number of dimensions to retain for subsequent analysis.</p>
+</section>
+<section id="validation-against-python-implementation" class="level2">
+<h2 class="anchored" data-anchor-id="validation-against-python-implementation">Validation Against Python Implementation</h2>
+<p>Our analysis produces results that align with the Python implementation’s output:</p>
+<ul>
+<li><em>Explained variance ratios</em> match within numerical precision</li>
+<li><em>Transformed data</em> reveals identical clustering patterns</li>
+<li><em>Feature loadings</em> show consistent relationships</li>
+<li><em>Geometric relationships</em> between data points remain unchanged</li>
+</ul>
+<p>While scikit-learn’s PC2 shows opposite signs due to different eigendecomposition algorithms, this difference is purely mathematical and does not affect the interpretation of results. Both implementations capture the same underlying structure, with our approach providing greater insight into the computational process through explicit transformations and functional composition.</p>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div></div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./notebooks/python/pca-example.html" class="pagination-link" aria-label="PCA Baseline: Python">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">PCA Baseline: Python</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./notebooks/conclusion.html" class="pagination-link" aria-label="Conclusion">
+        <span class="nav-page-text"><span class="chapter-title">Conclusion</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,23 @@
+{
+  "index.qmd": {
+    "index.html": "29f1f113"
+  },
+  "neandersolve.descriptive.qmd": {
+    "neandersolve.descriptive.html": "3349e792"
+  },
+  "neandersolve.eigen.qmd": {
+    "neandersolve.eigen.html": "df96ec8a"
+  },
+  "neandersolve.pca.qmd": {
+    "neandersolve.pca.html": "9c2c57b8"
+  },
+  "notebooks/python/pca-example.ipynb": {
+    "pca-example.html": "eceeb965"
+  },
+  "neandersolve.pca_analysis.qmd": {
+    "neandersolve.pca_analysis.html": "698ae47b"
+  },
+  "notebooks/conclusion.md": {
+    "conclusion.html": "cff0ecdd"
+  }
+}

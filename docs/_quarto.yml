@@ -1,0 +1,7 @@
+format:
+  html: {toc: true, toc-depth: 3, theme: united, number-sections: false}
+  revealjs: {theme: solarized, navigation-mode: vertical, transition: slide, background-transition: fade, incremental: true}
+project: {type: book}
+book:
+  chapters: [index.qmd, neandersolve.descriptive.qmd, neandersolve.eigen.qmd, neandersolve.pca.qmd, notebooks/python/pca-example.ipynb, neandersolve.pca_analysis.qmd, notebooks/conclusion.md]
+  title: 'CS7300: Final Project'

@@ -1,0 +1,472 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "CS7300: Final Project",
+    "section": "",
+    "text": "Jaryt Salvo\nDate: 12/13/24\nFall 2024 | CS 7300 Unsupervised Learning",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Jaryt Salvo</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#foundations-and-implementation",
+    "href": "index.html#foundations-and-implementation",
+    "title": "CS7300: Final Project",
+    "section": "Foundations and Implementation",
+    "text": "Foundations and Implementation\nThis work presents a rigorous implementation of fundamental statistical algorithms through the lens of functional programming. By leveraging Clojure’s immutable data structures and pure functions, we develop a robust framework for numerical computing that emphasizes both mathematical precision and computational efficiency.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Jaryt Salvo</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#descriptive-statistics",
+    "href": "index.html#descriptive-statistics",
+    "title": "CS7300: Final Project",
+    "section": "Descriptive Statistics",
+    "text": "Descriptive Statistics\nStatistical measures form the cornerstone of numerical computing. Our implementation establishes fundamental operations with careful attention to numerical stability and computational efficiency. The descriptive namespace provides:\n\nRobust implementations of central tendency and dispersion measures\nNumerically stable algorithms for variance computation\nEfficient matrix operations for covariance analysis",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Jaryt Salvo</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#eigendecomposition",
+    "href": "index.html#eigendecomposition",
+    "title": "CS7300: Final Project",
+    "section": "Eigendecomposition",
+    "text": "Eigendecomposition\nThe eigen namespace demonstrates the synthesis of mathematical theory with practical computation through:\n\nPower iteration for dominant eigenvalue computation\nQR algorithm for complete eigendecomposition\nInverse iteration for eigenvector determination",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Jaryt Salvo</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#principal-component-analysis",
+    "href": "index.html#principal-component-analysis",
+    "title": "CS7300: Final Project",
+    "section": "Principal Component Analysis",
+    "text": "Principal Component Analysis\nThe pca namespace builds directly on these foundations, implementing PCA with:\n\nTheoretical development from covariance analysis\nEfficient matrix transformations for high-dimensional data\nComprehensive comparison with industry-standard implementations",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Jaryt Salvo</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#implementation-validation",
+    "href": "index.html#implementation-validation",
+    "title": "CS7300: Final Project",
+    "section": "Implementation Validation",
+    "text": "Implementation Validation\nSystematic validation ensures correctness through comparison with established tools:\n\nBaseline implementation in Python using scikit-learn\nComprehensive test suite ensuring numerical accuracy\nPerformance analysis and optimization strategies",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Jaryt Salvo</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#technical-architecture",
+    "href": "index.html#technical-architecture",
+    "title": "CS7300: Final Project",
+    "section": "Technical Architecture",
+    "text": "Technical Architecture\nThe implementation leverages modern Clojure libraries while maintaining functional purity:\n\nNeanderthal for efficient numerical operations\nProperty-based testing for robust validation\nComprehensive documentation integrated with code\n\nThis work serves dual purposes: as a practical implementation of statistical algorithms and as an exploration of functional programming’s capabilities in numerical computing. Through careful attention to both mathematical rigor and computational efficiency, we demonstrate the viability of functional programming for serious statistical computing.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Jaryt Salvo</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.descriptive.html",
+    "href": "neandersolve.descriptive.html",
+    "title": "Descriptive Statistics",
+    "section": "",
+    "text": "Basic Statistical Measures\nStatistical analysis begins with understanding the fundamental characteristics of our data. These descriptive measures help us summarize and interpret large datasets through key numerical values. Our implementation prioritizes both numerical stability and computational efficiency.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Descriptive Statistics</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.descriptive.html#basic-statistical-measures",
+    "href": "neandersolve.descriptive.html#basic-statistical-measures",
+    "title": "Descriptive Statistics",
+    "section": "",
+    "text": "Arithmetic Mean\nThe arithmetic mean forms the foundation of many statistical computations. For a vector \\(x = (x_1, ..., x_n)\\), the mean is defined as:\n\\[\\bar{x} = \\frac{1}{n}\\sum_{i=1}^n x_i\\]\nWhile simple in theory, implementation requires careful consideration of numerical stability and efficiency.\n\n(defn mean\n  \"Computes the arithmetic mean of a vector using pure functional operations.\n   Returns a scalar value representing the mean.\"\n  ^double [x]\n  (/ (sum x) (dim x)))\n\nFor weighted data, we extend this concept to the weighted mean:\n\\[\\bar{x}_w = \\frac{\\sum_{i=1}^n w_i x_i}{\\sum_{i=1}^n w_i}\\]\nwhere \\(w_i\\) represents the weight of each observation. This implementation handles edge cases by returning NaN for invalid inputs.\n\n(defn weighted-mean\n  \"Computes the weighted mean of a vector given a weight vector.\n   Both vectors must have the same dimension.\n   Returns NaN if the sum of weights is zero or if vectors have different dimensions.\"\n  ^double [x weights]\n  (let [n (dim x)\n        weight-sum (sum weights)]\n    (if (and (= n (dim weights))\n             (not (zero? weight-sum)))\n      (/ (dot x weights) weight-sum)\n      Double/NaN)))\n\n\n\nGeometric Mean\nThe geometric mean provides a natural measure of central tendency for multiplicative processes and relative changes. For a vector \\(x\\) of positive numbers, it is defined as:\n\\[\\bar{x}_g = \\left(\\prod_{i=1}^n x_i\\right)^{1/n} = \\exp\\left(\\frac{1}{n}\\sum_{i=1}^n \\ln x_i\\right)\\]\nWe compute this by transforming to log space to avoid numerical overflow:\n\n(defn geometric-mean!\n  \"Computes the geometric mean of a vector using pure functional operations.\n   Returns a scalar value representing the geometric mean.\"\n  ^double [x!] ; (abs! x!) to allow negatives\n  (exp (mean (log! x!))))\n\n\n\nHarmonic Mean\nThe harmonic mean is particularly useful for averaging rates and speeds, giving more weight to smaller values. For a vector \\(x\\), it is defined as:\n\\[\\bar{x}_h = \\frac{n}{\\sum_{i=1}^n \\frac{1}{x_i}} = n \\left( \\sum_{i=1}^n \\frac{1}{x_i} \\right)^{-1}\\]\n\n(defn harmonic-mean!\n  \"Computes the harmonic mean of a vector.\n   Returns NaN for vectors containing zeros.\n   Modifies the input vector in place.\"\n  ^double [x!]\n  (let [n (dim x!)]\n    (if (&lt; 0 n)\n      (/ n (sum (fmap! #(/ 1.0 %) x!)))\n      Double/NaN)))\n\nThe arithmetic (AM), geometric (GM), and harmonic means (HM) are related through a fundamental inequality:\n\\[ \\mathrm{AM} \\geq \\mathrm{GM} \\geq \\mathrm{HM} \\]\nThis relationship, known as the AM-GM-HM inequality, demonstrates a consistent ordering among these measures of central tendency. The equality case occurs if and only if all elements in the sample are identical, reflecting the means’ convergence for homogeneous data. See Wikipedia.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Descriptive Statistics</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.descriptive.html#variance-computation",
+    "href": "neandersolve.descriptive.html#variance-computation",
+    "title": "Descriptive Statistics",
+    "section": "Variance Computation",
+    "text": "Variance Computation\nThe sample variance measures the spread of data around its mean. While the theoretical formula is straightforward:\n\\[\\sigma^2 = \\frac{1}{n-1}\\sum_{i=1}^n (x_i - \\bar{x})^2\\]\nA numerically stable implementation requires careful consideration to avoid catastrophic cancellation. We use a two-pass algorithm that first centers the data:\n\n(defn variance!\n  \"Computes the sample variance using a numerically stable algorithm.\n   Modifies the input vector x! in place.\n   Returns NaN for empty vectors.\"\n  [x!]\n  (let [n (dim x!)]\n    (if (&lt; 0 n)\n      (/ (sqr (nrm2 (linear-frac! 1.0 x! (- (mean x!))))) (dec n))\n      Double/NaN)))\n\nOur implementation computes variance using vector operations for efficiency:\n\nlinear-frac! centers the data by subtracting the mean: \\((x_i - x̄)\\)\nnrm2 computes the Euclidean norm: \\(\\sqrt{\\sum (x_i - x̄)^2}\\)\nsqr gives us the sum of squared deviations: \\(\\sum (x_i - x̄)^2\\)\nFinally, we divide by \\((n-1)\\) for the unbiased sample variance\n\nThis vectorized approach is mathematically equivalent to: \\[\\sigma^2 = \\frac{1}{n-1}\\sum_{i=1}^n (x_i - \\bar{x})^2\\]\nFor cases where preserving the input vector is important, we provide a non-destructive version that works on a copy of the data:\n\n(defn variance\n  \"Computes the sample variance using a numerically stable algorithm.\n   Preserves the input vector by working on a copy.\"\n  [x]\n  (with-release [x-copy (copy x)]\n    (variance! x-copy)))\n\n\n(variance (fv 1 2 3 4 5 6 7 8 9 10))\n\n\n9.16666571749536",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Descriptive Statistics</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.descriptive.html#mean-and-variance-in-a-single-pass",
+    "href": "neandersolve.descriptive.html#mean-and-variance-in-a-single-pass",
+    "title": "Descriptive Statistics",
+    "section": "Mean and Variance in a Single Pass",
+    "text": "Mean and Variance in a Single Pass\nWhile separate computations of mean and variance are straightforward, we can improve efficiency by computing both statistics in a single pass through the data. This approach reduces memory access and computational overhead, particularly important for large datasets.\nThe algorithm maintains running sums for both the first and second moments of the data. For a dataset of size \\(n\\), we compute:\n\\[\\mu = \\frac{1}{n}\\sum_{i=1}^n x_i\\] \\[\\sigma^2 = \\frac{1}{n-1}\\sum_{i=1}^n (x_i - \\mu)^2\\]\nThe implementation modifies the input vector in place for efficiency, returning both statistics as a pair:\n\n(defn mean-variance!\n  \"Computes both mean and variance in a single pass.\n   Modifies the input vector x! in place.\n   Returns [mean variance] pair, or [NaN NaN] for empty vectors.\"\n  [x!]\n  (let [n (dim x!)]\n    (if (&lt; 0 n)\n      (let [mu (mean x!)]\n        [mu (/ (sqr (nrm2 (linear-frac! 1.0 x! (- mu)))) (dec n))]) ; or n?\n      [Double/NaN Double/NaN])))\n\n\n(mean-variance! (fv 1 2 3 4 5 6 7 8 9 10))\n\n\n[5.5 9.16666571749536]",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Descriptive Statistics</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.descriptive.html#matrix-operations",
+    "href": "neandersolve.descriptive.html#matrix-operations",
+    "title": "Descriptive Statistics",
+    "section": "Matrix Operations",
+    "text": "Matrix Operations\nStatistical computations often require working with matrices, where each column represents a variable and each row an observation. We begin with computing means across matrix columns.\nThe matrix mean operation computes the arithmetic mean for each column, effectively reducing a matrix to a vector of column means:\n\n(defn matrix-mean\n  \"Computes column means of a matrix.\n   Returns a vector where each element is the mean of the corresponding column.\"\n  ([a ones res!]\n   (if (&lt; 0 (mrows a))\n     (mv! (/ 1.0 (mrows a)) (trans a) ones 0.0 res!)\n     (entry! res! Double/NaN)))\n  ([a ones]\n   (let-release [res (vctr a (ncols a))]\n                (matrix-mean a ones res)))\n  ([a]\n   (with-release [ones (entry! (vctr a (mrows a)) 1.0)]\n     (matrix-mean a ones))))\n\n\n(matrix-mean (fge 3 2 [4 2 3 4 5 6]))\n\n\n#RealBlockVector[float, n:2, stride:1]\n[   3.00    5.00 ]\n\n\nThe matrix variance computation extends our vector operations to handle multiple variables simultaneously. For each column \\(j\\) in matrix \\(A\\), we compute:\n\\[\\sigma^2_j = \\frac{1}{n-1}\\sum_{i=1}^n (a_{ij} - \\mu_j)^2\\]\nWe provide both in-place and copying versions to accommodate different usage patterns:\n\n(defn matrix-variance!\n  \"Computes column variances of a matrix in-place.\n   Modifies the input matrix a! during computation.\"\n  [a!]\n  (let [n (ncols a!)\n        result (vctr a! n)]\n    (loop [j 0]\n      (when (&lt; j n)\n        (entry! result j (variance (col a! j)))\n        (recur (inc j))))\n    result))\n\n\n(defn matrix-variance\n  \"Computes column variances of a matrix.\n   Preserves the input matrix by working on a copy.\"\n  [a]\n  (with-release [a-copy (copy a)]\n    (matrix-variance! a-copy)))",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Descriptive Statistics</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.descriptive.html#standard-error",
+    "href": "neandersolve.descriptive.html#standard-error",
+    "title": "Descriptive Statistics",
+    "section": "Standard Error",
+    "text": "Standard Error\nThe standard error of the mean quantifies the uncertainty in our estimate of the population mean. For a sample of size \\(n\\), it is defined as:\n\\[SE = \\frac{\\sigma}{\\sqrt{n}}\\]\n\n(defn standard-error\n  \"Computes the standard error of the mean.\"\n  [x]\n  (let [n (dim x)]\n    (sqrt (/ (variance x) n))))\n\nIt is important to distinguish between the standard error of the mean and the standard deviation. While both are frequently used to summarize data, they serve distinct statistical purposes:\n\nThe standard deviation characterizes the variability of individual observations within the sample\nThe standard error quantifies the precision of the sample mean as an estimator of the population mean\n\nAs sample size increases, the standard error decreases (approaching zero), reflecting improved estimation precision, while the standard deviation converges to the true population parameter. This relationship emerges from the central limit theorem and forms the basis for statistical inference.\nThe standard deviation, \\(\\sigma\\), is the sample standard deviation calculated as the square root of the variance:\n\\[\\sigma = \\sqrt{\\mathrm{Var}(X)}\\]\n\n(defn sd [x]\n  (sqrt (variance x)))",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Descriptive Statistics</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.descriptive.html#covariance-calculations",
+    "href": "neandersolve.descriptive.html#covariance-calculations",
+    "title": "Descriptive Statistics",
+    "section": "Covariance Calculations",
+    "text": "Covariance Calculations\nCovariance measures the joint variability between two variables. For vectors \\(x\\) and \\(y\\), the sample covariance is defined as:\n\\[cov(x,y) = \\frac{1}{n-1}\\sum_{i=1}^n (x_i - \\bar{x})(y_i - \\bar{y})\\]\nThe implementation first centers both vectors and then computes their dot product:\n\n(defn covariance!\n  \"Computes covariance between two vectors in-place.\n   Modifies both input vectors during computation.\"\n  [x! y!]\n  (let [n (dim x!)\n        x-mean (mean x!)\n        y-mean (mean y!)\n        x-centered (linear-frac! 1.0 x! (- x-mean))\n        y-centered (linear-frac! 1.0 y! (- y-mean))]\n    (/ (dot x-centered y-centered) (dec n))))\n\nFor applications requiring preservation of input data, we provide a non-destructive version:\n\n(defn covariance\n  \"Computes covariance between two vectors.\"\n  [x y]\n  (with-release [x-copy (copy x)\n                 y-copy (copy y)]\n    (covariance! x-copy y-copy)))\n\nThe covariance matrix extends this concept to multiple variables. For a data matrix \\(X\\) with \\(n\\) observations and \\(p\\) variables, the covariance matrix \\(\\Sigma\\) has elements:\n\\[\\Sigma_{ij} = \\frac{1}{n-1}\\sum_{k=1}^n (x_{ki} - \\bar{x}_i)(x_{kj} - \\bar{x}_j)\\]\n\n(defn matrix-covariance\n  \"Computes the covariance matrix for a data matrix X.\n   Each row represents an observation, each column a variable.\"\n  [X]\n  (let [n (mrows X)\n        p (ncols X)\n        result (dge p p)\n        X-mean (copy X)]\n    ;; Center the data\n    (loop [j 0]\n      (when (&lt; j p)\n        (let [col-j (col X-mean j)\n              col-mean (mean col-j)]\n          (linear-frac! 1.0 col-j (- col-mean))\n          (recur (inc j)))))\n    ;; Compute covariances\n    (loop [i 0]\n      (when (&lt; i p)\n        (loop [j i]\n          (when (&lt; j p)\n            (let [cov (/ (dot (col X-mean i) (col X-mean j))\n                         (dec n))]\n              (entry! result i j cov)\n              (when (not= i j)\n                (entry! result j i cov)))\n            (recur (inc j))))\n        (recur (inc i))))\n    result))\n\n\n(matrix-covariance (dge 3 2 [4 2 3 4 50 6]))\n\n\n#RealGEMatrix[double, mxn:2x2, layout:column]\n   ▥       ↓       ↓       ┓    \n   →       1.00  -23.00         \n   →     -23.00  676.00         \n   ┗                       ┛",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Descriptive Statistics</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.descriptive.html#correlation-analysis",
+    "href": "neandersolve.descriptive.html#correlation-analysis",
+    "title": "Descriptive Statistics",
+    "section": "Correlation Analysis",
+    "text": "Correlation Analysis\nCorrelation normalizes covariance to produce a standardized measure of linear association between variables. The Pearson correlation coefficient is defined as:\n\\[\\rho_{xy} = \\frac{cov(x,y)}{\\sigma_x\\sigma_y}\\]\nOur implementation centers the data and normalizes by the vector norms:\n\n(defn correlation!\n  \"Computes correlation between two vectors in-place.\n   Modifies both input vectors during computation.\"\n  [x! y!]\n  (let [x-mean (mean x!)\n        y-mean (mean y!)\n        x-centered (linear-frac! 1.0 x! (- x-mean))\n        y-centered (linear-frac! 1.0 y! (- y-mean))\n        x-norm (nrm2 x-centered)\n        y-norm (nrm2 y-centered)]\n    (if (and (not (zero? x-norm))\n             (not (zero? y-norm)))\n      (/ (dot x-centered y-centered)\n         (* x-norm y-norm))\n      0.0)))\n\nAs with covariance, we provide a non-destructive version:\n\n(defn correlation\n  \"Computes correlation between two vectors.\"\n  [x y]\n  (with-release [x-copy (copy x)\n                 y-copy (copy y)]\n    (correlation! x-copy y-copy)))\n\nThe correlation matrix contains all pairwise correlations between variables. For a data matrix \\(X\\), each element is:\n\\[R_{ij} = \\frac{\\sum_{k=1}^n (x_{ki} - \\bar{x}_i)(x_{kj} - \\bar{x}_j)}{\\sqrt{\\sum_{k=1}^n (x_{ki} - \\bar{x}_i)^2\\sum_{k=1}^n (x_{kj} - \\bar{x}_j)^2}}\\]\n\n(defn matrix-correlation\n  \"Computes the correlation matrix for a data matrix X.\n   Each row represents an observation, each column a variable.\"\n  [X]\n  (let [n (mrows X)\n        p (ncols X)\n        result (dge p p)\n        X-mean (copy X)]\n    ;; Center and normalize the data\n    (loop [j 0]\n      (when (&lt; j p)\n        (let [col-j (col X-mean j)\n              col-mean (mean col-j)]\n          ;; Center the column\n          (linear-frac! 1.0 col-j (- col-mean))\n          ;; Scale to unit norm\n          (let [norm (nrm2 col-j)]\n            (when (&gt; norm 0.0)\n              (scal! (/ 1.0 norm) col-j)))\n          (recur (inc j)))))\n    ;; Compute correlations\n    (loop [i 0]\n      (when (&lt; i p)\n        (loop [j i]\n          (when (&lt; j p)\n            (let [corr (dot (col X-mean i) (col X-mean j))]\n              (entry! result i j corr)\n              (when (not= i j)\n                (entry! result j i corr)))\n            (recur (inc j))))\n        (recur (inc i))))\n    result))",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Descriptive Statistics</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.descriptive.html#data-standardization",
+    "href": "neandersolve.descriptive.html#data-standardization",
+    "title": "Descriptive Statistics",
+    "section": "Data Standardization",
+    "text": "Data Standardization\nStandardization transforms variables to have zero mean and unit variance. For a vector \\(x\\), the z-score transformation is:\n\\[z_i = \\frac{x_i - \\bar{x}}{\\sigma_x}\\]\n\n(defn z-score\n  \"Standardizes a vector to have mean 0 and standard deviation 1.\"\n  [x]\n  (let [[mu sigma] (mean-variance! (copy x))\n        result (copy x)]\n    (linear-frac! 1.0 result (- mu))\n    (when (not (zero? sigma))\n      (scal! (/ 1.0 (sqrt sigma)) result))\n    result))\n\nFor matrix data, we provide functions to center and standardize all columns:\n\n(defn center!\n  \"Centers a matrix by subtracting the mean of each column.\"\n  [a!]\n  (loop [j 0]\n    (when (&lt; j (ncols a!))\n      (let [col-j (col a! j)]\n        (linear-frac! 1.0 col-j (- (mean col-j)))\n        (recur (inc j)))))\n  a!)\n\n\n(defn standardize!\n  \"Standardizes a matrix by centering and scaling to unit variance.\n   Modifies the input matrix in place.\n   Returns the modified matrix.\"\n  [a!]\n  (let [n (mrows a!)\n        p (ncols a!)]\n    ;; First center the data\n    (center! a!)\n    ;; Then scale to unit variance\n    (loop [j 0]\n      (when (&lt; j p)\n        (let [col-j (col a! j)\n              ss (dot col-j col-j)  ; sum of squares of centered data\n              std-dev (sqrt (/ ss (dec n)))]\n          (when (&gt; std-dev 0.0)\n            (scal! (/ 1.0 std-dev) col-j))\n          (recur (inc j)))))\n    a!))",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Descriptive Statistics</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.descriptive.html#data-normalization",
+    "href": "neandersolve.descriptive.html#data-normalization",
+    "title": "Descriptive Statistics",
+    "section": "Data Normalization",
+    "text": "Data Normalization\nIn data analysis and machine learning, the scale of features can significantly impact algorithm performance. When different features have vastly different ranges, they can dominate or diminish the influence of other features inappropriately. Normalization addresses this by transforming features to comparable scales.\n\nMin-Max Scaling\nThe simplest form of normalization maps values to the interval \\([0,1]\\). For a feature vector \\(x\\), the transformation is:\n\\[x_{normalized} = \\frac{x - min(x)}{max(x) - min(x)}\\]\nThis linear scaling preserves zero differences and the relative ordering of values while bounding them within \\([0,1]\\). When applied to matrices, the transformation is performed column-wise, treating each feature independently.\n\n(defn min-max!\n  \"Normalizes vectors or matrices to the range [0, 1] in-place.\n   For matrices, normalizes each column independently.\n   Modifies the input in place.\n   Returns the modified input.\n   Returns columns unchanged if max equals min.\"\n  [x!]\n  (if (vector? x!)\n    ; Vector case\n    (let [n (dim x!)\n          [min-x max-x] (loop [i 1\n                               min-val (entry x! 0)\n                               max-val (entry x! 0)]\n                         (if (&lt; i n)\n                           (let [val (entry x! i)]\n                             (recur (inc i)\n                                    (min min-val val)\n                                    (max max-val val)))\n                           [min-val max-val]))\n          range (- max-x min-x)]\n      (if (zero? range)\n        x!  ; Return unchanged if all values are the same\n        (linear-frac! (/ 1.0 range) x! (/ (- min-x) range))))\n    ; Matrix case - normalize each column\n    (let [m (mrows x!)\n          n (ncols x!)]\n      (dotimes [j n]\n        (let [col-j (col x! j)\n              [min-x max-x] (loop [i 1\n                                   min-val (entry col-j 0)\n                                   max-val (entry col-j 0)]\n                             (if (&lt; i m)\n                               (let [val (entry col-j i)]\n                                 (recur (inc i)\n                                        (min min-val val)\n                                        (max max-val val)))\n                               [min-val max-val]))\n              range (- max-x min-x)]\n          (when-not (zero? range)\n            (linear-frac! (/ 1.0 range) col-j (/ (- min-x) range)))))\n      x!)))\n\n\n\nFeature Scaling\nFor algorithms sensitive to the sign of inputs or requiring symmetric ranges, scaling to [-1,1] is often more appropriate. The transformation extends min-max scaling:\n\\[x_{normalized} = 2 \\cdot \\frac{x - min(x)}{max(x) - min(x)} - 1\\]\nThis centers the data around zero while maintaining relative distances between points. For matrices, each column is scaled independently to preserve feature-specific ranges.\n\n(defn feature-scale!\n  \"Normalizes vectors or matrices to the range [-1, 1] in-place.\n   For matrices, normalizes each column independently.\n   Modifies the input in place.\n   Returns the modified input.\n   Returns columns unchanged if max equals min.\"\n  [x!]\n  (if (vector? x!)\n    ; Vector case\n    (let [n (dim x!)\n          [min-x max-x] (loop [i 1\n                               min-val (entry x! 0)\n                               max-val (entry x! 0)]\n                         (if (&lt; i n)\n                           (let [val (entry x! i)]\n                             (recur (inc i)\n                                    (min min-val val)\n                                    (max max-val val)))\n                           [min-val max-val]))\n          range (- max-x min-x)]\n      (if (zero? range)\n        x!  ; Return unchanged if all values are the same\n        (linear-frac! (/ 2.0 range) x! (- (/ (+ min-x max-x) range)))))\n    ; Matrix case - normalize each column\n    (let [m (mrows x!)\n          n (ncols x!)]\n      (dotimes [j n]\n        (let [col-j (col x! j)\n              [min-x max-x] (loop [i 1\n                                   min-val (entry col-j 0)\n                                   max-val (entry col-j 0)]\n                             (if (&lt; i m)\n                               (let [val (entry col-j i)]\n                                 (recur (inc i)\n                                        (min min-val val)\n                                        (max max-val val)))\n                               [min-val max-val]))\n              range (- max-x min-x)]\n          (when-not (zero? range)\n            (linear-frac! (/ 2.0 range) col-j (- (/ (+ min-x max-x) range))))))\n      x!)))",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Descriptive Statistics</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.descriptive.html#conclusion",
+    "href": "neandersolve.descriptive.html#conclusion",
+    "title": "Descriptive Statistics",
+    "section": "Conclusion",
+    "text": "Conclusion\nDescriptive statistics provide the foundation for understanding and preparing data for advanced analysis. The implementations in this chapter demonstrate how to efficiently compute and transform data while adhering to numerical computing best practices.\nThese tools provide essential data preprocessing capabilities for statistical analysis and machine learning applications. While what we have implemented is not exhaustive, it provides a foundation for more complex statistical computations. Next steps would be to implement robust statistics and more advanced data transformations.\n\nRobust Statistics\nWhile mean and variance are fundamental statistical measures, they can be sensitive to outliers and extreme values. Robust statistics provide alternative measures that are less affected by anomalous data points.\n\nMedian and Quantiles\nThe median is the middle value when data is ordered. For an odd number of observations, it is the middle value; for an even number, it is the average of the two middle values. Unlike the mean, the median is not influenced by extreme values.\nMore generally, quantiles divide ordered data into equal-sized groups. The p-th quantile is the value below which a proportion \\(p\\) of the observations fall. Common quantiles include:\n\nQuartiles (dividing data into four parts)\nDeciles (ten parts)\nPercentiles (hundred parts)\n\n\n\nRobust Scale Estimates\nThe Median Absolute Deviation (MAD) is a robust measure of variability:\n\\[MAD = median(|x_i - median(x)|)\\]\nThe MAD is particularly useful when data contains outliers that would distort the standard deviation.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Descriptive Statistics</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.descriptive.html#implementation-notes",
+    "href": "neandersolve.descriptive.html#implementation-notes",
+    "title": "Descriptive Statistics",
+    "section": "Implementation Notes",
+    "text": "Implementation Notes\n\nPerformance Considerations\nFor large datasets, consider:\n\nUsing in-place operations when input preservation isn’t required\nBatching operations to minimize memory allocation\nTaking advantage of parallel processing capabilities where available\n\nThe implementation uses BLAS (Basic Linear Algebra Subprograms) operations where possible for optimal performance on numerical computations.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Descriptive Statistics</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.eigen.html",
+    "href": "neandersolve.eigen.html",
+    "title": "Eigenvalues and Eigenvectors",
+    "section": "",
+    "text": "The Eigenvalue Equation\nLinear transformations fundamentally change vectors in both magnitude and direction. However, certain special vectors maintain their direction under transformation, being only scaled by a factor. These vectors reveal intrinsic properties of the transformation that are crucial for understanding its behavior.\nFor a square matrix \\(A\\), if there exists a non-zero vector \\(\\mathbf{v}\\) and scalar \\(\\lambda\\) satisfying:\n\\[A \\phi = \\lambda \\phi\\]\nthen \\(\\phi\\) is called an eigenvector and \\(\\lambda\\) its corresponding eigenvalue. This equation tells us that when \\(A\\) transforms \\(\\phi\\), the result points in the same (or opposite) direction as \\(\\phi\\), scaled by \\(\\lambda\\).",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Eigenvalues and Eigenvectors</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.eigen.html#power-iteration-method",
+    "href": "neandersolve.eigen.html#power-iteration-method",
+    "title": "Eigenvalues and Eigenvectors",
+    "section": "Power Iteration Method",
+    "text": "Power Iteration Method\nThe power iteration method provides a simple way to find the dominant eigenvalue and its corresponding eigenvector. Starting with a random vector \\(\\mathbf{x}_0\\), we repeatedly apply the transformation:\n\\[\\mathbf{x}_{k+1} = \\frac{A\\mathbf{x}_k}{\\|A\\mathbf{x}_k\\|}\\]\nThis process converges to the eigenvector corresponding to the largest (in magnitude) eigenvalue. The convergence rate depends on the ratio between the largest and second-largest eigenvalues.\n\n(defn power-iteration-step\n  \"Performs a single step of the power iteration method.\n   Returns [new-lambda new-vector]\"\n  [A x]\n  (let [y (mv A x)\n        lambda (nrm2 y)\n        x-next (scal (/ 1.0 lambda) y)]\n    [lambda x-next]))\n\n\n(defn power-iteration\n  \"Implements the power method for finding the dominant eigenvalue and eigenvector.\n   Returns [eigenvalue eigenvector] after convergence or max iterations.\"\n  ([A]\n   (power-iteration A 1e-10 100))\n  ([A tol max-iter]\n   (let [n (mrows A)\n         x0 (entry! (vctr A n) 1.0)]\n    ;;  (println \"Matrix dimensions:\" (mrows A) \"x\" (ncols A))\n    ;;  (println \"Initial vector size:\" (dim x0))\n    ;;  (println \"Initial vector:\" x0)\n     (loop [x x0\n            iter 0\n            lambda-prev 0.0]\n      ;;  (println \"\\nIteration:\" iter)\n       (let [[lambda x-next] (power-iteration-step A x)]\n         ;;  (println \"Current lambda:\" lambda)\n         ;;  (println \"Lambda diff:\" (abs (- lambda lambda-prev)))\n         (if (or (&lt; (abs (- lambda lambda-prev)) tol)\n                 (&gt;= iter max-iter))\n           [lambda x-next]\n           (recur x-next (inc iter) lambda)))))))\n\nConsider a simple example matrix:\n\n(def test-matrix (dge 3 3 [4 2 3\n                           2 5 1\n                           3 1 6]))\n\nThe power iteration method finds its dominant eigenvalue and vector:\n\n(power-iteration test-matrix)\n\n\n[9.143895446103055 #RealBlockVector[double, n:3, stride:1]\n[   0.57    0.44    0.69 ]\n]",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Eigenvalues and Eigenvectors</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.eigen.html#qr-algorithm",
+    "href": "neandersolve.eigen.html#qr-algorithm",
+    "title": "Eigenvalues and Eigenvectors",
+    "section": "QR Algorithm",
+    "text": "QR Algorithm\nWhile power iteration finds the dominant eigenvalue, the QR algorithm can compute all eigenvalues simultaneously. The method is based on the QR decomposition, where a matrix \\(A\\) is factored into \\(A = QR\\) with \\(Q\\) orthogonal and \\(R\\) upper triangular.\nThe algorithm proceeds iteratively:\n\nStart with \\(A_0 = A\\)\nAt step \\(k\\), compute \\(A_k = Q_kR_k\\)\nForm \\(A_{k+1} = R_kQ_k\\)\n\nAs \\(k\\) increases, \\(A_k\\) converges to an upper triangular matrix with eigenvalues on the diagonal. The convergence rate depends on the separation between eigenvalues.\n\n(defn qr-step\n  \"Performs a single step of QR iteration.\n   Returns the next matrix in the sequence.\"\n  [A]\n  (let [fact (qrf A)  ; Get QR factorization\n        ;;  _ (println \"QR factorization created\")\n        Q (org fact)   ; Get orthogonal matrix Q\n        ;;  _ (println \"Q matrix extracted\")\n        ;;  _ (println \"Q:\" Q)\n        ; The R matrix is stored in the :or field of the factorization\n        R (view-tr (:or fact) {:uplo :upper})   ; Get upper triangular matrix R directly from factorization\n        ;;  _ (println \"R matrix extracted\")\n        _ (println \"R:\" R)\n        result (mm R Q)]  ; Compute next iteration\n    result))\n\n\n(defn qr-algorithm\n  \"Implements the QR algorithm for computing all eigenvalues.\n   Returns a vector of eigenvalues after convergence.\"\n  ([A]\n   (qr-algorithm A 1e-10 100))\n  ([A tol max-iter]\n   (let [A0 (copy A)]\n    ;;  (println \"\\nStarting QR algorithm\")\n    ;;  (println \"Initial matrix:\" A0)\n     (loop [Ak A0\n            k 0]\n      ;;  (println \"\\nIteration:\" k)\n       (let [Ak+1 (qr-step Ak)\n             diff (nrm2 (axpy! -1 (dia Ak+1) (dia Ak)))]\n         ;;  (println \"Current diagonal:\" (dia Ak))\n         ;;  (println \"Next diagonal:\" (dia Ak+1))\n         ;;  (println \"Difference:\" diff)\n         (if (or (&lt; diff tol) (&gt;= k max-iter))\n           (dia Ak+1)\n           (recur Ak+1 (inc k))))))))\n\nLet’s examine the convergence on our test matrix:\n\n(qr-algorithm test-matrix)\n\n\n#RealBlockVector[double, n:3, stride:4]\n[   9.14    4.38    1.47 ]",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Eigenvalues and Eigenvectors</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.eigen.html#inverse-iteration",
+    "href": "neandersolve.eigen.html#inverse-iteration",
+    "title": "Eigenvalues and Eigenvectors",
+    "section": "Inverse Iteration",
+    "text": "Inverse Iteration\nOnce we have eigenvalues, we can find their corresponding eigenvectors using inverse iteration. This method is based on the observation that if \\(\\lambda\\) is an eigenvalue of \\(A\\), then \\((A - \\lambda I)\\) is singular, and its null space contains the corresponding eigenvector.\nThe algorithm applies power iteration to \\((A - \\lambda I)^{-1}\\):\n\nStart with a random vector \\(\\mathbf{x}_0\\)\nSolve \\((A - \\lambda I)\\mathbf{y}_{k+1} = \\mathbf{x}_k\\)\nSet \\(\\mathbf{x}_{k+1} = \\mathbf{y}_{k+1}/\\|\\mathbf{y}_{k+1}\\|\\)\n\nThis process converges to the eigenvector corresponding to the eigenvalue closest to \\(\\lambda\\). The convergence is typically rapid when \\(\\lambda\\) is close to an actual eigenvalue.\n\n(defn inverse-iteration\n  \"Implements inverse iteration for finding eigenvector given eigenvalue.\n   Returns the corresponding eigenvector after convergence.\"\n  ([A lambda]\n   (inverse-iteration A lambda 1e-10 100))\n  ([A lambda tol max-iter]\n   (let [n (mrows A)\n        ;;  _ (println \"Matrix dimension:\" n)\n         I (dge n n)\n         _ (dotimes [i n] (entry! I i i 1.0))\n         ;;  _ (println \"Identity matrix:\" I)\n         scaled-I (scal (- lambda) I)\n         ;;  _ (println \"Scaled identity matrix (-λI):\" scaled-I)\n         ;;  _ (println \"Original matrix A:\" A)\n         A-lambda-I (axpy! 1.0 (copy A) scaled-I)  ; A - λI\n         ;;  _ (println \"A - λI:\" A-lambda-I)\n         x0 (entry! (vctr A n) 1.0)]\n     (loop [x x0\n            iter 0]\n      ;;  (println \"\\nIteration:\" iter)\n      ;;  (println \"Current x:\" x)\n       (let [y (copy x)\n             ;;  _ (println \"y before solve:\" y)\n             ; Create fresh LU factorization for each solve\n             LU (trf (copy A-lambda-I))\n             ;;  _ (println \"LU matrix:\" LU)\n             ; Solve using tri! on fresh LU factorization\n             y-next (mv (tri! LU) y)\n             y-norm (nrm2 y-next)\n             ;;  _ (println \"y after solve:\" y-next)\n             ;;  _ (println \"y norm:\" y-norm)\n             x-next (scal (/ 1.0 y-norm) y-next)]\n         ;;  (println \"Next x:\" x-next)\n         (if (or (&lt; (nrm2 (axpy! -1 x-next x)) tol)\n                 (&gt;= iter max-iter))\n           x-next\n           (recur x-next (inc iter))))))))\n\nUsing our test matrix and an eigenvalue from QR algorithm:\n\n(def lambda1 (entry (qr-algorithm test-matrix) 0))\n\n\n(def v1 (inverse-iteration test-matrix lambda1))\n\nWe can verify this is indeed an eigenpair:\n\n(let [Av (mv test-matrix v1)\n      lambdav (scal lambda1 v1)]\n  (nrm2 (axpy! -1 Av lambdav)))\n\n\n6.670682632020425E-12\n\nThe small residual norm confirms that \\(\\lambda \\phi - A \\phi \\approx 0\\), validating our computed eigenpair.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Eigenvalues and Eigenvectors</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.eigen.html#complete-eigendecomposition",
+    "href": "neandersolve.eigen.html#complete-eigendecomposition",
+    "title": "Eigenvalues and Eigenvectors",
+    "section": "Complete Eigendecomposition",
+    "text": "Complete Eigendecomposition\nWhile the previous methods find individual eigenvalues and eigenvectors, many applications require the complete eigendecomposition. A matrix \\(A\\) can be decomposed as:\n\\[A = \\Phi \\Lambda \\Phi^{-1}\\]\nwhere \\(\\Lambda\\) is a diagonal matrix of eigenvalues and \\(\\Phi\\) contains the corresponding eigenvectors as columns. For symmetric matrices, \\(\\Phi\\) is orthogonal, making the decomposition particularly useful for numerical computations.\nThe implementation handles both symmetric and general matrices efficiently:\n\nFor symmetric matrices, we use specialized algorithms that preserve symmetry\nFor general matrices, we handle potential complex eigenvalues\nIn both cases, eigenvalues are sorted by magnitude for consistency\n\n\n(defn eigendecomposition\n  \"Computes complete eigendecomposition of a matrix.\n   Returns [eigenvalues eigenvectors] as matrices with eigenvalues sorted in descending order.\"\n  [A]\n  (let [n (mrows A)\n        symmetric? (instance? uncomplicate.neanderthal.internal.cpp.structures.RealUploMatrix A)\n        ;; Create matrices based on matrix type\n        [eigenvals eigenvecs]\n        (if symmetric?\n          ;; For symmetric matrices - use matrix directly\n          (let [d (gd A n)  ;; Diagonal matrix for eigenvalues\n                evecs (ge A n n)]  ;; Matrix for eigenvectors\n            (ev! A (view-ge (dia d)) nil evecs)  ;; Use symmetric matrix directly\n            ;; Extract diagonal values directly to vector\n            [(fmap! identity (dia d)) evecs])\n          ;; For general matrices\n          (let [evals (raw (ge A n 2))\n                evecs (ge A n n)]\n            (ev! (copy A) evals nil evecs)\n            ;; Extract first column (real parts) directly\n            [(fmap! identity (col evals 0)) evecs]))\n        ;; Create result matrices for sorted values\n        sorted-vals (vctr A n)\n        sorted-vecs (ge A n n)\n        ;; Find indices sorted by absolute eigenvalue magnitude\n        perm (vec (sort-by #(- (abs (entry eigenvals %))) (range n)))]\n    ;; Copy values in sorted order using efficient operations\n    (dotimes [i n]\n      (let [src-idx (perm i)]\n        (entry! sorted-vals i (entry eigenvals src-idx))\n        ;; Use axpy! for efficient column copy\n        (axpy! 1.0 (col eigenvecs src-idx) (col sorted-vecs i))))\n    [sorted-vals sorted-vecs]))\n\n\n(eigendecomposition test-matrix)\n\n\n[#RealBlockVector[double, n:3, stride:1]\n[   9.14    4.38    1.47 ]\n #RealGEMatrix[double, mxn:3x3, layout:column]\n   ▥       ↓       ↓       ↓       ┓    \n   →       0.57   -0.02    0.82         \n   →       0.44   -0.83   -0.33         \n   →       0.69    0.55   -0.47         \n   ┗                               ┛    \n]\n\n\n(defn eigendecomposition!\n  \"In-place version of eigendecomposition that modifies the input matrices.\n   Requires pre-allocated eigenvals and eigenvecs matrices of correct dimensions.\"\n  [A eigenvals eigenvecs]\n  (ev! (copy A) eigenvals nil eigenvecs))",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Eigenvalues and Eigenvectors</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.eigen.html#verification-and-testing",
+    "href": "neandersolve.eigen.html#verification-and-testing",
+    "title": "Eigenvalues and Eigenvectors",
+    "section": "Verification and Testing",
+    "text": "Verification and Testing\nTo ensure the correctness of our eigendecomposition, we verify that each computed pair \\((\\lambda, \\phi)\\) satisfies the eigenvalue equation \\(A \\phi = \\lambda \\phi\\) within numerical tolerance.\nThe verification process checks:\n\nEigenvalue equation: \\(\\|A \\phi - \\lambda \\phi\\| \\approx 0\\)\nVector normalization: \\(\\|\\phi\\| = 1\\)\nFor symmetric matrices, orthogonality: \\(\\phi_i^T \\phi_j = 0\\) for \\(i \\neq j\\)\n\n\n(defn is-eigenpair?\n  \"Verifies if (lambda, v) is an eigenpair of matrix A within tolerance.\"\n  ([A lambda v]\n   (is-eigenpair? A lambda v 1e-8))\n  ([A lambda v tol]\n   (let [Av (mv A v)\n         lambdav (scal lambda v)]\n     (&lt; (nrm2 (axpy! -1 Av lambdav)) tol))))\n\n\n(require '[neandersolve.descriptive :refer\n           [center! standardize! min-max! feature-scale!]])\n\n\n(defn test-eigenpairs\n  \"Tests and prints the eigenpairs of a given matrix.\n   Standardizes the matrix before computing eigendecomposition.\"\n  [A]\n  (let [[eigenvals eigenvecs] (eigendecomposition A)\n        n (mrows A)]\n    (println \"\\nTesting eigenpairs:\")\n    (loop [i 0]\n      (when (&lt; i n)\n        (let [lambda (entry eigenvals i)\n              v (col eigenvecs i)\n              Av (mv A v)\n              lambdav (scal lambda v)\n              diff (nrm2 (axpy! -1 Av lambdav))]\n          (println \"Eigenvalue\" i \":\" lambda)\n          (println \"Eigenvector\" i \":\" (seq v))\n          (println \"Difference |Av - λv|:\" diff)\n          (println \"Is eigenpair?\" (is-eigenpair? A lambda v))\n          (println)\n          (recur (inc i)))))\n    [eigenvals eigenvecs]))\n\nWe can test our implementation with different matrix preprocessing:\n\n(test-eigenpairs test-matrix)\n\n\n[#RealBlockVector[double, n:3, stride:1]\n[   9.14    4.38    1.47 ]\n #RealGEMatrix[double, mxn:3x3, layout:column]\n   ▥       ↓       ↓       ↓       ┓    \n   →       0.57   -0.02    0.82         \n   →       0.44   -0.83   -0.33         \n   →       0.69    0.55   -0.47         \n   ┗                               ┛    \n]\n\nOriginal matrix\n\n(test-eigenpairs (standardize! (copy test-matrix)))\n\n\n[#RealBlockVector[double, n:3, stride:1]\n[2.1     1.1     2.46E-17]\n #RealGEMatrix[double, mxn:3x3, layout:column]\n   ▥       ↓       ↓       ↓       ┓    \n   →       0.16    0.68    0.32         \n   →      -0.77    0.05    0.76         \n   →       0.62   -0.73    0.57         \n   ┗                               ┛    \n]\n\nStandardized\n\n(test-eigenpairs (center! (copy test-matrix)))\n\n\n[#RealBlockVector[double, n:3, stride:1]\n[   4.53    1.47   -0.00 ]\n #RealGEMatrix[double, mxn:3x3, layout:column]\n   ▥       ↓       ↓       ↓       ┓    \n   →       0.08   -0.81    0.60         \n   →      -0.74    0.34    0.68         \n   →       0.67    0.47    0.43         \n   ┗                               ┛    \n]\n\nCentered\n\n(test-eigenpairs (min-max! (copy test-matrix)))\n\n\n[#RealBlockVector[double, n:3, stride:1]\n[   1.45    1.00    0.55 ]\n #RealGEMatrix[double, mxn:3x3, layout:column]\n   ▥       ↓       ↓       ↓       ┓    \n   →      -0.67    0.00   -0.67         \n   →       0.00    0.85    0.00         \n   →      -0.75   -0.53    0.75         \n   ┗                               ┛    \n]\n\nMin-max scaled\n\n(test-eigenpairs (feature-scale! (copy test-matrix)))\n\n\n[#RealBlockVector[double, n:3, stride:1]\n[   2.15    1.13   -0.29 ]\n #RealGEMatrix[double, mxn:3x3, layout:column]\n   ▥       ↓       ↓       ↓       ┓    \n   →       0.21   -0.70    0.37         \n   →      -0.74   -0.10    0.73         \n   →       0.64    0.71    0.57         \n   ┗                               ┛    \n]\n\nFeature scaled",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Eigenvalues and Eigenvectors</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.eigen.html#matrix-powers-and-similarity",
+    "href": "neandersolve.eigen.html#matrix-powers-and-similarity",
+    "title": "Eigenvalues and Eigenvectors",
+    "section": "Matrix Powers and Similarity",
+    "text": "Matrix Powers and Similarity\nOne powerful application of eigendecomposition is efficient computation of matrix powers. For a diagonalizable matrix \\(A = \\Phi \\Lambda \\Phi^{-1}\\), we have:\n\\[A^k = (\\Phi \\Lambda \\Phi^{-1})^k = \\Phi \\Lambda^k \\Phi^{-1}\\]\nThis allows us to compute high powers of matrices without repeated multiplication, which is particularly useful in:\n\nMarkov chains: Computing steady-state distributions\nDynamical systems: Analyzing long-term behavior\nNetwork analysis: Computing multi-step connections\n\nThe implementation demonstrates this with a simple example:\n\n(comment\n  (let [A (dge 2 2 [-4 3 -6 5])\n        evec (dge 2 2)\n        eval (ev! (copy A) (raw A) nil evec)\n        inv-evec (tri! (trf evec))\n        d (mm inv-evec (mm A evec))]\n    (fmap! (pow 9) (dia d))\n    d))",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Eigenvalues and Eigenvectors</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.pca.html",
+    "href": "neandersolve.pca.html",
+    "title": "Principal Component Analysis",
+    "section": "",
+    "text": "Mathematical Foundation\nHigh-dimensional data often contains redundant or correlated features. While each feature may carry information, the true patterns often lie in lower-dimensional subspaces. Principal Component Analysis (PCA) provides a mathematical framework for discovering these intrinsic patterns by transforming data into a new coordinate system aligned with directions of maximum variance.\nFor a dataset with \\(n\\) observations and \\(p\\) features, represented as an \\(n \\times p\\) matrix \\(\\mathbf{X}\\), PCA seeks a transformation that reveals the underlying structure. This transformation comes from the eigendecomposition of the covariance matrix:\n\\[\\mathbf{C} = \\frac{1}{n-1}\\mathbf{X}^T\\mathbf{X}\\]\nThe eigenvectors of \\(\\mathbf{C}\\) form the principal components, while their corresponding eigenvalues indicate the amount of variance explained by each component.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Principal Component Analysis</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.pca.html#data-preprocessing",
+    "href": "neandersolve.pca.html#data-preprocessing",
+    "title": "Principal Component Analysis",
+    "section": "Data Preprocessing",
+    "text": "Data Preprocessing\nBefore computing principal components, we must ensure our data is properly centered and optionally scaled. This preprocessing step is crucial for PCA’s effectiveness:\n\n(defn center-data\n  \"Centers the data matrix by subtracting column means.\n   Returns [centered-data column-means].\"\n  [X]\n  (let [n (mrows X)\n        means (entry! (vctr X (ncols X)) 0.0)\n        centered (copy X)\n        ones (entry! (vctr X n) 1.0)]\n    ;; Compute means efficiently using matrix-vector multiplication\n    (mv! (/ 1.0 n) (trans X) ones 0.0 means)\n    ;; Center using rank-1 update with outer product of ones and means\n    (rk! -1.0 ones means centered)\n    [centered means]))\n\nThe centering operation ensures that each feature has zero mean, removing location effects that could bias our variance calculations. For features measured on different scales, we also provide scaling to unit variance:\n\n(defn scale-data\n  \"Scales the data matrix to unit variance.\n   Returns [scaled-data column-stds].\"\n  [X]\n  (let [p (ncols X)\n        stds (entry! (vctr X p) 0.0)\n        scaled (copy X)]\n    (loop [j 0]\n      (when (&lt; j p)\n        (let [col-std (sqrt (desc/variance (col X j)))]\n          (entry! stds j col-std)\n          (scal! (/ 1.0 col-std) (col scaled j))\n          (recur (inc j)))))\n    [scaled stds]))",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Principal Component Analysis</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.pca.html#covariance-computation",
+    "href": "neandersolve.pca.html#covariance-computation",
+    "title": "Principal Component Analysis",
+    "section": "Covariance Computation",
+    "text": "Covariance Computation\nThe covariance matrix captures the relationships between features. For centered data \\(\\mathbf{X}\\), we compute it efficiently through matrix multiplication:\n\\[\\mathbf{C} = \\frac{1}{n-1}\\mathbf{X}^T\\mathbf{X}\\]\n\n(defn compute-covariance\n  \"Computes the covariance matrix of centered data.\n   Each row represents an observation, each column a variable.\"\n  [X-centered]\n  (let [n (mrows X-centered)\n        covar (mm (trans X-centered) X-centered)]\n    (scal! (/ 1.0 (dec n)) covar)))",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Principal Component Analysis</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.pca.html#model-fitting",
+    "href": "neandersolve.pca.html#model-fitting",
+    "title": "Principal Component Analysis",
+    "section": "Model Fitting",
+    "text": "Model Fitting\nThe core PCA algorithm combines preprocessing, covariance computation, and eigendecomposition into a unified workflow. This process reveals the principal components and their relative importance in explaining data variance:\n\nOptionally center the data: \\(\\mathbf{X}_c = \\mathbf{X} - \\mathbf{1}\\boldsymbol{\\mu}^T\\)\nOptionally scale to unit variance: \\(\\mathbf{X}_s = \\mathbf{X}_c\\mathbf{D}^{-1}\\)\nCompute covariance matrix: \\(\\mathbf{C} = \\frac{1}{n-1}\\mathbf{X}_s^T\\mathbf{X}_s\\)\nPerform eigendecomposition: \\(\\mathbf{C} = \\Phi\\mathbf{\\Lambda}\\Phi^T\\)\n\n\n(defn pca-fit\n  \"Fits PCA model to data matrix X.\n   Returns map containing principal components, explained variance, etc.\"\n  ([X]\n   (pca-fit X true true))\n  ([X center?]\n   (pca-fit X center? false))\n  ([X center? scale?]\n   (let [[X-processed means] (if center? \n                              (center-data X)\n                              [X (entry! (vctr X (ncols X)) 0.0)])\n         [X-final stds] (if scale? \n                         (scale-data X-processed)\n                         [X-processed (entry! (vctr X-processed (ncols X-processed)) 1.0)])\n         cov-matrix (compute-covariance X-final)\n         [eigenvals eigenvecs] (eigen/eigendecomposition cov-matrix)\n         total-var (sum eigenvals)\n         explained-var-ratio (fmap! #(/ % total-var) (copy eigenvals))]\n     {:components eigenvecs\n      :explained_variance eigenvals\n      :explained_variance_ratio explained-var-ratio\n      :means means\n      :scale stds})))",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Principal Component Analysis</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.pca.html#data-transformation",
+    "href": "neandersolve.pca.html#data-transformation",
+    "title": "Principal Component Analysis",
+    "section": "Data Transformation",
+    "text": "Data Transformation\nOnce we have fitted a PCA model, we can transform new data into the principal component space. This transformation involves:\n\nCentering: \\(\\mathbf{X}_c = \\mathbf{X} - \\mathbf{1}\\boldsymbol{\\mu}^T\\)\nScaling: \\(\\mathbf{X}_s = \\mathbf{X}_c\\mathbf{D}^{-1}\\)\nProjection: \\(\\mathbf{X}_{pca} = \\mathbf{X}_s\\Phi_k\\)\n\nwhere \\(\\Phi_k\\) contains the first \\(k\\) principal components.\n\n(defn transform\n  \"Transforms data using fitted PCA model.\n   Optional n-components parameter for dimensionality reduction.\"\n  ([X pca-model]\n   (transform X pca-model (ncols (:components pca-model))))\n  ([X pca-model n-components]\n   (let [means (:means pca-model)\n         scale (:scale pca-model)\n         ;; Center the data\n         X-centered (if (some? means)\n                     (let [means-mat (raw X)]\n                       (loop [i 0]\n                         (when (&lt; i (mrows X))\n                           (loop [j 0]\n                             (when (&lt; j (ncols X))\n                               (entry! means-mat i j (entry means j))\n                               (recur (inc j))))\n                           (recur (inc i))))\n                       (axpy -1.0 means-mat X))\n                     X)\n         ;; Scale the centered data\n         X-scaled (if (some? scale)\n                   (let [scaled (copy X-centered)]\n                     (loop [j 0]\n                       (when (&lt; j (ncols scaled))\n                         (scal! (/ 1.0 (entry scale j)) (col scaled j))\n                         (recur (inc j))))\n                     scaled)\n                   X-centered)\n         ;; Select components for dimensionality reduction\n         components (let [full-components (:components pca-model)\n                          selected (raw (mm (trans X) X))]\n                     (loop [i 0]\n                       (when (&lt; i (mrows full-components))\n                         (loop [j 0]\n                           (when (&lt; j n-components)\n                             (entry! selected i j (entry full-components i j))\n                             (recur (inc j))))\n                         (recur (inc i))))\n                     selected)]\n     ;; Transform the data using the principal components\n     (mm X-scaled components))))\n\n\n(transform (fge 2 3 [1 2 3 4 5 6]) (pca-fit (fge 2 3 [1 2 3 4 5 6])))\n\n\n#RealGEMatrix[float, mxn:2x3, layout:column]\n   ▥       ↓       ↓       ↓       ┓    \n   →       1.22    0.00    0.00         \n   →      -1.22   -0.00   -0.00         \n   ┗                               ┛",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Principal Component Analysis</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.pca.html#inverse-transformation",
+    "href": "neandersolve.pca.html#inverse-transformation",
+    "title": "Principal Component Analysis",
+    "section": "Inverse Transformation",
+    "text": "Inverse Transformation\nTo reconstruct data from its principal component representation, we reverse the transformation process:\n\nBack-projection: \\(\\mathbf{X}_s = \\mathbf{X}_{pca}\\Phi_k^T\\)\nUnscaling: \\(\\mathbf{X}_c = \\mathbf{X}_s\\mathbf{D}\\)\nUncentering: \\(\\mathbf{X} = \\mathbf{X}_c + \\mathbf{1}\\boldsymbol{\\mu}^T\\)\n\n\n(defn inverse-transform\n  \"Reconstructs original data from transformed data.\"\n  [X-transformed pca-model]\n  (let [;; Project back to original feature space\n        components (let [full-components (:components pca-model)\n                         selected (raw (mm (trans X-transformed) X-transformed))]\n                     (loop [i 0]\n                       (when (&lt; i (mrows full-components))\n                         (loop [j 0]\n                          (when (&lt; j (ncols X-transformed))\n                            (entry! selected i j (entry full-components i j))\n                            (recur (inc j))))\n                         (recur (inc i))))\n                     selected)\n        X-scaled (mm X-transformed (trans components))\n        ;; Unscale the data\n        X-unscaled (if (some? (:scale pca-model))\n                    (let [scaled (copy X-scaled)]\n                      (loop [j 0]\n                        (when (&lt; j (ncols scaled))\n                          (scal! (entry (:scale pca-model) j) (col scaled j))\n                          (recur (inc j))))\n                      scaled)\n                    X-scaled)\n        ;; Uncenter the data\n        result (if (some? (:means pca-model))\n                (let [means-mat (raw X-unscaled)]\n                  (loop [i 0]\n                    (when (&lt; i (mrows X-unscaled))\n                      (loop [j 0]\n                        (when (&lt; j (ncols X-unscaled))\n                          (entry! means-mat i j (entry (:means pca-model) j))\n                          (recur (inc j))))\n                      (recur (inc i))))\n                  (axpy 1.0 means-mat X-unscaled))\n                X-unscaled)]\n    result))",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Principal Component Analysis</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.pca.html#utility-functions",
+    "href": "neandersolve.pca.html#utility-functions",
+    "title": "Principal Component Analysis",
+    "section": "Utility Functions",
+    "text": "Utility Functions\n\nExplained Variance Analysis\nThe explained variance ratio helps determine the optimal number of components to retain. The cumulative explained variance shows how much of the total variance is captured by the first \\(k\\) components:\n\n(defn explained-variance-cumsum\n  \"Computes cumulative explained variance ratio.\"\n  [pca-model]\n  (reductions + (:explained_variance_ratio pca-model)))\n\n\n(defn n-components-for-variance\n  \"Determines number of components needed to explain desired variance ratio.\"\n  [pca-model target-variance]\n  (let [cumsum (explained-variance-cumsum pca-model)]\n    (inc (count (take-while #(&lt; % target-variance) cumsum)))))\n\n\n\nExample Usage\nTransform a simple 2x3 matrix:\n\n(transform (fge 2 3 [1 2 3 4 5 6]) \n          (pca-fit (fge 2 3 [1 2 3 4 5 6])))\n\n\n#RealGEMatrix[float, mxn:2x3, layout:column]\n   ▥       ↓       ↓       ↓       ┓    \n   →       1.22    0.00    0.00         \n   →      -1.22   -0.00   -0.00         \n   ┗                               ┛    \n\n\nReconstruct the original data:\n\n(inverse-transform (fge 2 3 [1.22 -1.22 0 0 0 0 0]) \n                  (pca-fit (fge 2 3 [1 2 3 4 5 6])))\n\n\n#RealGEMatrix[float, mxn:2x3, layout:column]\n   ▥       ↓       ↓       ↓       ┓    \n   →       1.00    3.00    5.00         \n   →       2.00    4.00    6.00         \n   ┗                               ┛",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Principal Component Analysis</span>"
+    ]
+  },
+  {
+    "objectID": "notebooks/python/pca-example.html",
+    "href": "notebooks/python/pca-example.html",
+    "title": "PCA Baseline: Python",
+    "section": "",
+    "text": "This Python notebook demonstrates a conventional PCA workflow using scikit-learn. Through a series of standard steps - data loading, standardization, dimensionality reduction, and visualization - it establishes expected behaviors and results for PCA analysis. The notebook employs widely-used libraries like pandas for data manipulation, scikit-learn for PCA computation, and matplotlib for visualization. This represents the typical approach data scientists take when performing PCA, making it an ideal reference point for validating our implementation.\n\n# Import required libraries\nimport pandas as pd\nimport numpy as np\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.decomposition import PCA\nimport matplotlib.pyplot as plt\nimport seaborn as sns\n\n\n# Load and prepare the data\niris_data = pd.read_csv(\"../../data/iris.csv\")\nX = iris_data.iloc[:, :4]  # Select all rows and first 4 columns\ny = iris_data['variety']\n\n# Standardize the features\nscaler = StandardScaler()\nX_scaled = scaler.fit_transform(X)\n\n# Perform PCA\npca = PCA()\nX_pca = pca.fit_transform(X_scaled)\n\n# Print PCA summary\nprint(\"Explained variance ratio:\", pca.explained_variance_ratio_)\nprint(\"Cumulative variance ratio:\", np.cumsum(pca.explained_variance_ratio_))\n\nExplained variance ratio: [0.72962445 0.22850762 0.03668922 0.00517871]\nCumulative variance ratio: [0.72962445 0.95813207 0.99482129 1.        ]\n\n\n\nplt.figure(figsize=(10, 6))\ncategories = pd.Categorical(y).codes\nscatter = plt.scatter(X_pca[:, 0], X_pca[:, 1], c=categories, cmap='viridis')\nplt.xlabel(f'PC1 ({pca.explained_variance_ratio_[0]:.1%} variance explained)')\nplt.ylabel(f'PC2 ({pca.explained_variance_ratio_[1]:.1%} variance explained)')\nplt.title('PCA of Iris Dataset')\nplt.legend(scatter.legend_elements()[0], y.unique())\nplt.show()\n\n\n\n\n\n\n\n\n\n# Create biplot\ndef biplot(score, coef, labels=None):\n    xs = score[:,0]\n    ys = score[:,1]\n    n = coef.shape[0]\n    plt.figure(figsize=(10, 6))\n    plt.scatter(xs, ys, c=pd.Categorical(y).codes, cmap='viridis')\n    for i in range(n):\n        plt.arrow(0, 0, coef[i,0]*5, coef[i,1]*5, color='r', alpha=0.5)\n        if labels is None:\n            plt.text(coef[i,0]*5.2, coef[i,1]*5.2, f'Var{i+1}')\n        else:\n            plt.text(coef[i,0]*5.2, coef[i,1]*5.2, labels[i])\n            \n    plt.xlabel('PC1')\n    plt.ylabel('PC2')\n    plt.title('PCA Biplot of Iris Dataset')\n    plt.grid()\n\n# Create and show biplot\nbiplot(X_pca, pca.components_.T, X.columns)\nplt.show()\n\n\n\n\n\n\n\n\n\n# Create scree plot\nplt.figure(figsize=(10, 6))\nplt.bar(range(1, len(pca.explained_variance_ratio_) + 1), \n        pca.explained_variance_ratio_ * 100)\nplt.xlabel('Principal Component')\nplt.ylabel('Variance Explained (%)')\nplt.title('Scree Plot')\nplt.show()",
+    "crumbs": [
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>PCA Baseline: Python</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.pca_analysis.html",
+    "href": "neandersolve.pca_analysis.html",
+    "title": "PCA: The Clojure Way",
+    "section": "",
+    "text": "Data Preparation and Representation\nThe foundation of any PCA implementation lies in its data preparation. While scikit-learn abstracts this process through implicit transformations, our Clojure approach emphasizes explicit control and functional composition.\nIn contrast to Python’s approach, our implementation provides fine-grained control over each transformation step. We begin with data loading that enforces consistent Clojure naming conventions of kebab-case keywords as column names:\nThe key-fn transformation ensures Clojurian naming conventions. By replacing spaces and dots with hyphens, converting to lowercase, and using keywords, we establish the kebab-case keyword naming convention.\nNext, we convert the dataset to a matrix format to prepare for our Neanderthal PCA implementation:",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>PCA: The Clojure Way</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.pca_analysis.html#data-preparation-and-representation",
+    "href": "neandersolve.pca_analysis.html#data-preparation-and-representation",
+    "title": "PCA: The Clojure Way",
+    "section": "",
+    "text": "(def iris\n  (tc/dataset \"data/iris.csv\"\n              {:key-fn (fn [colname]\n                         (-&gt; colname\n                             (clojure.string/replace #\"\\.|\\s\" \"-\")\n                             clojure.string/lower-case\n                             keyword))}))\n\n\n\n\n(def iris-matrix\n  (tc-helpers/dataset-&gt;matrix\n   (tc/drop-columns iris [:variety])))",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>PCA: The Clojure Way</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.pca_analysis.html#core-pca-implementation",
+    "href": "neandersolve.pca_analysis.html#core-pca-implementation",
+    "title": "PCA: The Clojure Way",
+    "section": "Core PCA Implementation",
+    "text": "Core PCA Implementation\nOur PCA implementation diverges fundamentally from scikit-learn’s black-box approach. Where scikit-learn combines fitting and transformation into a single operation, we deliberately separate these concerns for clarity and flexibility:\nX = iris_data.iloc[:, :4]  # Select all rows and first 4 columns\ny = iris_data['variety']\n\n\n# Standardize the features\nscaler = StandardScaler()\nX_scaled = scaler.fit_transform(X)\n\n\n# Perform PCA\npca = PCA()\nX_pca = pca.fit_transform(X_scaled)\n\n(defn perform-pca [X]\n  (let [pca-result (pca/pca-fit X true true)  ; center and scale the data\n        transformed (pca/transform X pca-result)]\n    (assoc pca-result :transformed transformed)))\n\n\n(perform-pca iris-matrix)\n\n\n{:components #RealGEMatrix[float, mxn:4x4, layout:column]\n   ▥       ↓       ↓       ↓       ↓       ┓    \n   →       0.52   -0.38   -0.72    0.26         \n   →      -0.27   -0.92    0.24   -0.12         \n   →       0.58   -0.02    0.14   -0.80         \n   →       0.56   -0.07    0.63    0.52         \n   ┗                                       ┛    \n, :explained_variance #RealBlockVector[float, n:4, stride:1]\n[   2.92    0.91    0.15    0.02 ]\n, :explained_variance_ratio #RealBlockVector[float, n:4, stride:1]\n[.73     .23     3.67E-2 5.18E-3 ]\n, :means #RealBlockVector[float, n:4, stride:1]\n[   5.84    3.06    3.76    1.20 ]\n, :scale #RealBlockVector[float, n:4, stride:1]\n[   0.83    0.44    1.77    0.76 ]\n, :transformed #RealGEMatrix[float, mxn:150x4, layout:column]\n   ▥       ↓       ↓       ↓       ↓       ┓    \n   →      -2.26   -0.48   -0.13    0.02         \n   →      -2.07    0.67   -0.23    0.10         \n   →       ⁙       ⁙       ⁙       ⁙            \n   →       1.37   -1.01    0.93    0.03         \n   →       0.96    0.02    0.53   -0.16         \n   ┗                                       ┛    \n}\n\nThis separation provides:\n\nIndependent access to model parameters and transformed data\nAbility to transform new data without refitting\nExplicit control over centering and scaling decisions\nClear separation between model creation and data transformation",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>PCA: The Clojure Way</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.pca_analysis.html#data-transformation-and-visualization",
+    "href": "neandersolve.pca_analysis.html#data-transformation-and-visualization",
+    "title": "PCA: The Clojure Way",
+    "section": "Data Transformation and Visualization",
+    "text": "Data Transformation and Visualization\nThe transformation of PCA results into visualizable form reveals another key distinction in our approach. Rather than relying on direct array manipulation as in Python, we maintain data context throughout the analysis pipeline:\n\n(def pcas-iris\n  (-&gt; (:transformed (perform-pca iris-matrix))\n      (tc-helpers/matrix-&gt;dataset)\n      (tc/rename-columns {:x1 :pc1 :x2 :pc2 :x3 :pc3 :x4 :pc4})))\n\nThis transformation preserves column semantics through meaningful names while maintaining clear data provenance. Our visualization approach emphasizes declarative specifications over imperative commands:\n\n(-&gt; pcas-iris\n    (tc/add-column :variety (tc/column iris :variety))\n    (hanami/plot hanami/point-chart\n                 {:=x :pc1\n                  :=y :pc2\n                  :=color :variety\n                  :=mark-size 100}))\n\n\nThis declarative and layering style (akin to R’s ggplot2) contrasts sharply with matplotlib’s imperative approach:\nplt.figure(figsize= (10, 6))\ncategories = pd.Categorical(y).codes\nscatter = plt.scatter(X_pca[:, 0], X_pca[:, 1], c=categories, cmap='viridis')\nplt.xlabel(f'PC1 ({pca.explained_variance_ratio_[0]:.1%} variance explained)')\nplt.ylabel(f'PC2 ({pca.explained_variance_ratio_[1]:.1%} variance explained)')\nplt.title('PCA of Iris Dataset')\nplt.legend(scatter.legend_elements()[0], y.unique())\nplt.show()\n\n\n\nPython’s PCA Plot\n\n\n\nUnderstanding Sign Differences in Principal Components\nA key observation when comparing our PCA implementation with scikit-learn’s is that PC2 often shows opposite signs. This is not an error, but rather a fundamental property of eigendecomposition. The direction of eigenvectors is arbitrary – both \\(\\mathbf{v}\\) and \\(-\\mathbf{v}\\) are valid eigenvectors for the same eigenvalue.\nIn our implementation, the sign of PC2 comes from our QR iteration algorithm, while scikit-learn uses a different algorithm (LAPACK’s DGESVD). Neither is “wrong” – they’re both valid orthogonal bases that explain the same amount of variance.\nThe key properties that remain invariant regardless of sign:\n\nOrthogonality between components\nAmount of variance explained\nRelative distances between points\nClustering patterns in the transformed space",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>PCA: The Clojure Way</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.pca_analysis.html#feature-contribution-analysis",
+    "href": "neandersolve.pca_analysis.html#feature-contribution-analysis",
+    "title": "PCA: The Clojure Way",
+    "section": "Feature Contribution Analysis",
+    "text": "Feature Contribution Analysis\nWhen creating biplots, the sign difference affects the direction of feature vectors, but not their relative angles or magnitudes. Both representations are equally valid for interpretation.\n\n(def component-arrows\n  (let [components (-&gt; (:components (perform-pca iris-matrix))\n                       (tc-helpers/matrix-&gt;dataset))\n        scale-factor 5.0\n        labels [:sepal-length :sepal-width :petal-length :petal-width]]\n    (-&gt;&gt; (range (count labels))\n         (map (fn [i]\n                {:label (nth labels i)\n                 :x0 0  :y0 0\n                 :x1 (* scale-factor (nth (components :x1) i))  ; PC1 loading\n                 :y1 (* scale-factor (nth (components :x2) i))}))  ; PC2 loading\n         (tc/dataset))))\n\nThe biplot combines both the transformed data points and feature vectors, providing a comprehensive view of the PCA results:\n\n(-&gt; pcas-iris\n    (tc/add-column :variety (tc/column iris :variety))\n    (plotly/layer-point\n     {:=x :pc1\n      :=y :pc2\n      :=color :variety})\n    (plotly/update-data (fn [_] component-arrows))\n    (plotly/layer-segment\n     {:=x0 :x0\n      :=y0 :y0\n      :=x1 :x1\n      :=y1 :y1\n    ;;   :=color :label\n      :=mark-color :red})\n    (plotly/layer-text\n     {:=x :x1\n      :=y :y1\n      :=text :label}))\n\n\nCompare this with the Python notebook’s biplot:\ndef biplot(score, coef, labels=None):\n    xs = score[:,0]\n    ys = score[:,1]\n    n = coef.shape[0]\n    plt.figure(figsize=(10, 6))\n    plt.scatter(xs, ys, c=pd.Categorical(y).codes, cmap='viridis')\n    for i in range(n):\n        plt.arrow(0, 0, coef[i,0]*5, coef[i,1]*5, color='r', alpha=0.5)\n        if labels is None:\n            plt.text(coef[i,0]*5.2, coef[i,1]*5.2, f'Var{i+1}')\n        else:\n            plt.text(coef[i,0]*5.2, coef[i,1]*5.2, labels[i])\n\n    plt.xlabel('PC1')\n    plt.ylabel('PC2')\n    plt.title('PCA Biplot of Iris Dataset')\n    plt.grid()\n\n\n# Create and show biplot\nbiplot(X_pca, pca.components_.T, X.columns)\nplt.show()\n\n\n\nPython PCA Biplot",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>PCA: The Clojure Way</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.pca_analysis.html#variance-analysis",
+    "href": "neandersolve.pca_analysis.html#variance-analysis",
+    "title": "PCA: The Clojure Way",
+    "section": "Variance Analysis",
+    "text": "Variance Analysis\nThe final step in PCA interpretation examines the explained variance ratio, revealing the effectiveness of our dimensionality reduction:\n\n(let [explained-var (seq (:explained_variance_ratio (perform-pca iris-matrix)))]\n  (-&gt; (tc/dataset {:pc (range 1 (inc (count explained-var)))\n                   :explained-var explained-var})\n      (hanami/plot hanami/bar-chart\n                   {:=x :pc :=y :explained-var :=mark-size 70})))\n\n\nThis visualization quantifies the trade-off between dimensionality reduction and information retention. The relative importance of each component guides decisions about the optimal number of dimensions to retain for subsequent analysis.",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>PCA: The Clojure Way</span>"
+    ]
+  },
+  {
+    "objectID": "neandersolve.pca_analysis.html#validation-against-python-implementation",
+    "href": "neandersolve.pca_analysis.html#validation-against-python-implementation",
+    "title": "PCA: The Clojure Way",
+    "section": "Validation Against Python Implementation",
+    "text": "Validation Against Python Implementation\nOur analysis produces results that align with the Python implementation’s output:\n\nExplained variance ratios match within numerical precision\nTransformed data reveals identical clustering patterns\nFeature loadings show consistent relationships\nGeometric relationships between data points remain unchanged\n\nWhile scikit-learn’s PC2 shows opposite signs due to different eigendecomposition algorithms, this difference is purely mathematical and does not affect the interpretation of results. Both implementations capture the same underlying structure, with our approach providing greater insight into the computational process through explicit transformations and functional composition.",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>PCA: The Clojure Way</span>"
+    ]
+  },
+  {
+    "objectID": "notebooks/conclusion.html",
+    "href": "notebooks/conclusion.html",
+    "title": "Conclusion",
+    "section": "",
+    "text": "Functional Programming in Statistical Computing\nThis project set out to challenge traditional object-oriented approaches to machine learning by implementing fundamental statistical algorithms in Clojure. The initial scope encompassed three core algorithms: K-means clustering, Principal Component Analysis (PCA), and Linear Discriminant Analysis (LDA). While we focused primarily on PCA, this concentrated effort revealed both the potential and limitations of functional programming in statistical computing.",
+    "crumbs": [
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Conclusion</span>"
+    ]
+  },
+  {
+    "objectID": "notebooks/conclusion.html#implementation-achievements",
+    "href": "notebooks/conclusion.html#implementation-achievements",
+    "title": "Conclusion",
+    "section": "Implementation Achievements",
+    "text": "Implementation Achievements\nThe PCA implementation demonstrates several key advantages of functional programming. Through careful attention to immutability and pure functions, we developed a numerically stable implementation that maintains mathematical rigor while providing explicit control over computational processes. The separation of concerns between data transformation, eigendecomposition, and visualization components illustrates how functional programming naturally supports modular algorithm design.",
+    "crumbs": [
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Conclusion</span>"
+    ]
+  },
+  {
+    "objectID": "notebooks/conclusion.html#technical-challenges",
+    "href": "notebooks/conclusion.html#technical-challenges",
+    "title": "Conclusion",
+    "section": "Technical Challenges",
+    "text": "Technical Challenges\nSeveral technical challenges emerged during implementation. The eigendecomposition algorithm required careful consideration of numerical stability and performance optimization. While Neanderthal provides efficient matrix operations, bridging the gap between its imperative core and our functional interface demanded careful design decisions. The sign differences in eigenvectors between our implementation and scikit-learn’s highlighted the subtle complexities in numerical computing that persist regardless of programming paradigm.",
+    "crumbs": [
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Conclusion</span>"
+    ]
+  },
+  {
+    "objectID": "notebooks/conclusion.html#limitations-and-future-work",
+    "href": "notebooks/conclusion.html#limitations-and-future-work",
+    "title": "Conclusion",
+    "section": "Limitations and Future Work",
+    "text": "Limitations and Future Work\nThe project’s scope reduction from three algorithms to a focused PCA implementation reflects realistic constraints in academic software development. This limitation, however, allowed for deeper exploration of fundamental numerical computing challenges. Future work should address:\n\nImplementation of remaining algorithms (K-means, LDA)\nPerformance optimization for large-scale datasets\nEnhanced parallelization of matrix operations\nComprehensive benchmarking against established libraries",
+    "crumbs": [
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Conclusion</span>"
+    ]
+  },
+  {
+    "objectID": "notebooks/conclusion.html#broader-implications",
+    "href": "notebooks/conclusion.html#broader-implications",
+    "title": "Conclusion",
+    "section": "Broader Implications",
+    "text": "Broader Implications\nDespite its limited scope, this project demonstrates the viability of functional programming for statistical computing. Clojure’s immutable data structures and pure functions provide a robust foundation for implementing numerical algorithms. The combination of Neanderthal’s performance with functional programming’s modularity suggests a promising direction for developing statistical computing libraries.\nThe clear separation between mathematical theory and computational implementation, evident in our documentation and code structure, indicates that functional programming may offer advantages in teaching and understanding statistical algorithms. However, the project also reveals that successful statistical computing libraries must balance theoretical purity with practical performance considerations.",
+    "crumbs": [
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Conclusion</span>"
+    ]
+  },
+  {
+    "objectID": "notebooks/conclusion.html#final-assessment",
+    "href": "notebooks/conclusion.html#final-assessment",
+    "title": "Conclusion",
+    "section": "Final Assessment",
+    "text": "Final Assessment\nWhile this implementation falls short of the original proposal’s ambitious scope, it provides valuable insights into the challenges and opportunities of functional programming in statistical computing. The successful PCA implementation, validated against industry-standard tools, suggests that Clojure and Neanderthal could form the basis of a robust statistical computing ecosystem. Future development should focus on expanding the algorithm collection while maintaining the careful balance between functional purity and computational efficiency demonstrated in this initial work.",
+    "crumbs": [
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Conclusion</span>"
+    ]
+  }
+]

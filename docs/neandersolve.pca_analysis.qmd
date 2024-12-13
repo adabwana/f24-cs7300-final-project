@@ -1,0 +1,348 @@
+
+---
+format:
+  html: {toc: true, toc-depth: 3, theme: united, number-sections: false, output-file: neandersolve.pca_analysis.html}
+code-block-background: true
+highlight-style: atom-one
+
+---
+<style></style><style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style><style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="neandersolve.pca_analysis_files/md-default2.js" type="text/javascript"></script><script src="neandersolve.pca_analysis_files/md-default3.js" type="text/javascript"></script><script src="neandersolve.pca_analysis_files/vega4.js" type="text/javascript"></script><script src="neandersolve.pca_analysis_files/vega5.js" type="text/javascript"></script><script src="neandersolve.pca_analysis_files/vega6.js" type="text/javascript"></script><script src="neandersolve.pca_analysis_files/plotly7.js" type="text/javascript"></script>
+
+::: {.sourceClojure}
+```clojure
+(ns neandersolve.pca-analysis
+  (:require
+   [tablecloth.api :as tc]
+   [scicloj.tableplot.v1.hanami :as hanami]
+   [scicloj.tableplot.v1.plotly :as plotly]
+   [neandersolve.pca :as pca]
+   [neandersolve.utils.tc-helpers :as tc-helpers]))
+```
+:::
+
+
+
+# PCA: The Clojure Way
+
+
+## Data Preparation and Representation
+
+The foundation of any *PCA implementation* lies in its data preparation. While scikit-learn abstracts this process through implicit transformations, our Clojure approach emphasizes *explicit control* and *functional composition*. 
+
+In contrast to Python's approach, our implementation provides fine-grained control over each transformation step. We begin with data loading that enforces consistent Clojure naming conventions of *kebab-case* keywords as column names:
+
+
+::: {.sourceClojure}
+```clojure
+(def iris
+  (tc/dataset "data/iris.csv"
+              {:key-fn (fn [colname]
+                         (-> colname
+                             (clojure.string/replace #"\.|\s" "-")
+                             clojure.string/lower-case
+                             keyword))}))
+```
+:::
+
+
+The `key-fn` transformation ensures Clojurian naming conventions. By replacing spaces and dots with hyphens, converting to lowercase, and using keywords, we establish the *kebab-case* keyword naming convention.
+
+Next, we convert the dataset to a matrix format to prepare for our *Neanderthal* PCA implementation:
+
+
+::: {.sourceClojure}
+```clojure
+(def iris-matrix
+  (tc-helpers/dataset->matrix
+   (tc/drop-columns iris [:variety])))
+```
+:::
+
+
+
+## Core PCA Implementation
+
+Our **PCA implementation** diverges fundamentally from `scikit-learn`'s *black-box approach*. Where `scikit-learn` combines fitting and transformation into a single operation, we deliberately *separate* these concerns for clarity and flexibility:
+
+```python
+X = iris_data.iloc[:, :4]  # Select all rows and first 4 columns
+y = iris_data['variety']
+
+
+# Standardize the features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+
+# Perform PCA
+pca = PCA()
+X_pca = pca.fit_transform(X_scaled)
+```
+
+
+::: {.sourceClojure}
+```clojure
+(defn perform-pca [X]
+  (let [pca-result (pca/pca-fit X true true)  ; center and scale the data
+        transformed (pca/transform X pca-result)]
+    (assoc pca-result :transformed transformed)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(perform-pca iris-matrix)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+{:components #RealGEMatrix[float, mxn:4x4, layout:column]
+   ▥       ↓       ↓       ↓       ↓       ┓    
+   →       0.52   -0.38   -0.72    0.26         
+   →      -0.27   -0.92    0.24   -0.12         
+   →       0.58   -0.02    0.14   -0.80         
+   →       0.56   -0.07    0.63    0.52         
+   ┗                                       ┛    
+, :explained_variance #RealBlockVector[float, n:4, stride:1]
+[   2.92    0.91    0.15    0.02 ]
+, :explained_variance_ratio #RealBlockVector[float, n:4, stride:1]
+[.73     .23     3.67E-2 5.18E-3 ]
+, :means #RealBlockVector[float, n:4, stride:1]
+[   5.84    3.06    3.76    1.20 ]
+, :scale #RealBlockVector[float, n:4, stride:1]
+[   0.83    0.44    1.77    0.76 ]
+, :transformed #RealGEMatrix[float, mxn:150x4, layout:column]
+   ▥       ↓       ↓       ↓       ↓       ┓    
+   →      -2.26   -0.48   -0.13    0.02         
+   →      -2.07    0.67   -0.23    0.10         
+   →       ⁙       ⁙       ⁙       ⁙            
+   →       1.37   -1.01    0.93    0.03         
+   →       0.96    0.02    0.53   -0.16         
+   ┗                                       ┛    
+}
+
+```
+:::
+
+
+This separation provides:
+
+- **Independent access** to model *parameters* and *transformed data*
+- Ability to transform new data *without refitting*
+- **Explicit control** over centering and scaling decisions
+- **Clear separation** between *model creation* and *data transformation*
+
+
+## Data Transformation and Visualization
+
+The transformation of PCA results into visualizable form reveals another key distinction in our approach. Rather than relying on direct array manipulation as in Python, we maintain *data context* throughout the analysis pipeline:
+
+
+::: {.sourceClojure}
+```clojure
+(def pcas-iris
+  (-> (:transformed (perform-pca iris-matrix))
+      (tc-helpers/matrix->dataset)
+      (tc/rename-columns {:x1 :pc1 :x2 :pc2 :x3 :pc3 :x4 :pc4})))
+```
+:::
+
+
+This transformation preserves column semantics through meaningful names while maintaining clear data provenance. Our visualization approach emphasizes *declarative specifications* over imperative commands:
+
+
+::: {.sourceClojure}
+```clojure
+(-> pcas-iris
+    (tc/add-column :variety (tc/column iris :variety))
+    (hanami/plot hanami/point-chart
+                 {:=x :pc1
+                  :=y :pc2
+                  :=color :variety
+                  :=mark-size 100}))
+```
+:::
+
+
+
+```{=html}
+<div><script>vegaEmbed(document.currentScript.parentElement, {"encoding":{"color":{"field":"variety","type":"nominal"},"x":{"field":"pc1","type":"quantitative"},"y":{"field":"pc2","type":"quantitative"}},"usermeta":{"embedOptions":{"renderer":"svg"}},"mark":{"type":"circle","size":100,"tooltip":true},"width":400,"background":"floralwhite","height":300,"data":{"url":"neandersolve.pca_analysis_files\/0.csv","format":{"type":"csv"}}});</script></div>
+```
+
+
+This declarative and layering style (akin to R's `ggplot2`) contrasts sharply with matplotlib's imperative approach:
+
+```python
+plt.figure(figsize= (10, 6))
+categories = pd.Categorical(y).codes
+scatter = plt.scatter(X_pca[:, 0], X_pca[:, 1], c=categories, cmap='viridis')
+plt.xlabel(f'PC1 ({pca.explained_variance_ratio_[0]:.1%} variance explained)')
+plt.ylabel(f'PC2 ({pca.explained_variance_ratio_[1]:.1%} variance explained)')
+plt.title('PCA of Iris Dataset')
+plt.legend(scatter.legend_elements()[0], y.unique())
+plt.show()
+```
+
+![Python's PCA Plot](images/python-pca-plot.jpg)
+
+
+### Understanding Sign Differences in Principal Components
+
+A key observation when comparing our PCA implementation with scikit-learn's is that *PC2* often shows opposite signs. This is not an error, but rather a fundamental property of *eigendecomposition*. The direction of eigenvectors is arbitrary -- both $\mathbf{v}$ and $-\mathbf{v}$ are valid eigenvectors for the same eigenvalue.
+
+In our implementation, the sign of PC2 comes from our *QR iteration* algorithm, while scikit-learn uses a different algorithm (LAPACK's DGESVD). Neither is "wrong" -- they're both valid *orthogonal bases* that explain the same amount of variance.
+
+The key properties that remain invariant regardless of sign:
+
+1. *Orthogonality* between components
+2. Amount of *variance explained*
+3. *Relative distances* between points
+4. *Clustering patterns* in the transformed space
+
+
+## Feature Contribution Analysis
+
+When creating *biplots*, the sign difference affects the direction of feature vectors, but not their relative angles or magnitudes. Both representations are equally valid for interpretation.
+
+
+::: {.sourceClojure}
+```clojure
+(def component-arrows
+  (let [components (-> (:components (perform-pca iris-matrix))
+                       (tc-helpers/matrix->dataset))
+        scale-factor 5.0
+        labels [:sepal-length :sepal-width :petal-length :petal-width]]
+    (->> (range (count labels))
+         (map (fn [i]
+                {:label (nth labels i)
+                 :x0 0  :y0 0
+                 :x1 (* scale-factor (nth (components :x1) i))  ; PC1 loading
+                 :y1 (* scale-factor (nth (components :x2) i))}))  ; PC2 loading
+         (tc/dataset))))
+```
+:::
+
+
+The *biplot* combines both the transformed data points and feature vectors, providing a comprehensive view of the PCA results:
+
+
+::: {.sourceClojure}
+```clojure
+(-> pcas-iris
+    (tc/add-column :variety (tc/column iris :variety))
+    (plotly/layer-point
+     {:=x :pc1
+      :=y :pc2
+      :=color :variety})
+    (plotly/update-data (fn [_] component-arrows))
+    (plotly/layer-segment
+     {:=x0 :x0
+      :=y0 :y0
+      :=x1 :x1
+      :=y1 :y1
+    ;;   :=color :label
+      :=mark-color :red})
+    (plotly/layer-text
+     {:=x :x1
+      :=y :y1
+      :=text :label}))
+```
+:::
+
+
+
+```{=html}
+<div style="height:400px;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+              [{"y":[-0.4784255027770996,0.6718810200691223,0.34076470136642456,0.5953983664512634,-0.6446771621704102,-1.4842073917388916,-0.04748706519603729,-0.22240488231182098,1.1116018295288086,0.46744608879089355,-1.0402076244354248,-0.13263602554798126,0.7262415289878845,0.9582945704460144,-1.8538483381271362,-2.6773173809051514,-1.4786577224731445,-0.48720782995224,-1.4003291130065918,-1.1240853071212769,-0.4074924886226654,-0.9210377335548401,-0.4568147659301758,-0.08527447283267975,-0.13679823279380798,0.6235280632972717,-0.2413569539785385,-0.5253910422325134,-0.3121737539768219,0.33660247921943665,0.5028545260429382,-0.42228230834007263,-1.7875889539718628,-2.143548011779785,0.4586637616157532,0.20541752874851227,-0.6593508124351501,-0.5903167128562927,0.9011593461036682,-0.2679830491542816,-0.4402422308921814,2.3296093940734863,0.4774990975856781,-0.47075146436691284,-1.1384172439575195,0.7086768746376038,-1.1166902780532837,0.3849554657936096,-0.9946295619010925,-0.009187119081616402],"r":null,"name":"Setosa","marker":{"color":"#1B9E77"},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[-2.257141351699829,-2.0740127563476562,-2.356334924697876,-2.2917065620422363,-2.3818628787994385,-2.0687007904052734,-2.435868501663208,-2.2253918647766113,-2.3268449306488037,-2.177034378051758,-2.1590771675109863,-2.318363904953003,-2.211043119430542,-2.6243083477020264,-2.191399574279785,-2.254662036895752,-2.2002170085906982,-2.1830363273620605,-1.8922332525253296,-2.335545063018799,-1.9079312086105347,-2.199644088745117,-2.7650814056396484,-1.8125970363616943,-2.219726800918579,-1.945328950881958,-2.0443027019500732,-2.161336660385132,-2.1324198246002197,-2.257697820663452,-2.1329760551452637,-1.82547926902771,-2.606217384338379,-2.4380104541778564,-2.1029295921325684,-2.200437068939209,-2.038317918777466,-2.518893241882324,-2.4215197563171387,-2.162466287612915,-2.2788407802581787,-1.8519175052642822,-2.545111656188965,-1.9578884840011597,-2.1299235820770264,-2.062833309173584,-2.3767709732055664,-2.3863816261291504,-2.2220027446746826,-2.196475028991699],"text":null},{"y":[-0.8600931167602539,-0.5926315784454346,-0.6142417192459106,1.7485443353652954,0.20772328972816467,0.5913008451461792,-0.7704404592514038,1.8462419509887695,-0.03212059289216995,1.0305637121200562,2.645209312438965,0.06308168917894363,1.7588303089141846,0.18560056388378143,0.43753522634506226,-0.5073660016059875,0.19565407931804657,0.7894488573074341,1.6168253421783447,1.2982580661773682,-0.3952499330043793,0.41592511534690857,0.9302074313163757,0.41499561071395874,0.06319788843393326,-0.24995796382427216,0.07699619233608246,-0.3302075266838074,0.22517117857933044,1.0551820993423462,1.5570534467697144,1.5672231912612915,0.7746590375900269,0.6317246556282043,0.28681033849716187,-0.8427613973617554,-0.5203105211257935,1.3783692121505737,0.21876835823059082,1.3248841762542725,1.1162869930267334,-0.024841874837875366,0.9851019978523254,2.0124940872192383,0.8528710007667542,0.18058516085147858,0.38363268971443176,0.15435436367988586,1.5386356115341187,0.5968504548072815],"r":null,"name":"Versicolor","marker":{"color":"#D95F02"},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[1.0981022119522095,0.7288956046104431,1.2368358373641968,0.4061232805252075,1.071884036064148,0.3873898983001709,0.7440373301506042,-0.48569485545158386,0.9248034954071045,0.011388525366783142,-0.10982730984687805,0.4392222762107849,0.5602322220802307,0.7171595096588135,-0.03324315696954727,0.8724843263626099,0.34908249974250793,0.1582803577184677,1.2210036516189575,0.1643678843975067,0.7352198362350464,0.47469720244407654,1.230057954788208,0.630745530128479,0.7003152966499329,0.8713546395301819,1.2523140907287598,1.3538696765899658,0.6625809073448181,-0.04012373089790344,0.13035912811756134,0.023375047370791435,0.24073241651058197,1.0575522184371948,0.22323139011859894,0.427706241607666,1.0452263355255127,1.0410444736480713,0.06935619562864304,0.28253135085105896,0.27814674377441406,0.622484564781189,0.3354074954986572,-0.3609732389450073,0.28762301802635193,0.09105579555034637,0.22695665061473846,0.5744639039039612,-0.4461716413497925,0.2558736801147461],"text":null},{"y":[-0.8675176501274109,0.6965339183807373,-0.5601361393928528,0.04682813584804535,-0.294062077999115,-0.7977389097213745,1.5562868118286133,-0.41866546869277954,0.7090612053871155,-1.9145985841751099,-0.6904457807540894,0.42029014229774475,-0.41785213351249695,1.1583776473999023,0.440792441368103,-0.6739894151687622,-0.25477057695388794,-2.5481271743774414,-0.017723513767123222,1.7010445594787598,-0.9074299335479736,0.5698531270027161,-0.412261962890625,0.4802002012729645,-1.0105386972427368,-1.0044150352478027,0.31533607840538025,-0.06413339078426361,0.1867333948612213,-0.5604152679443359,-0.2584206759929657,-2.6175568103790283,0.17795105278491974,0.2919425070285797,0.8086045384407043,-0.853944718837738,-1.0650161504745483,-0.42102232575416565,-0.01716785505414009,-0.673872709274292,-0.6118381023406982,-0.6872751712799072,0.6965339183807373,-0.8646265864372253,-1.0456680059432983,-0.3856762647628784,0.8936906456947327,-0.2681729793548584,-1.0078805685043335,0.024248067289590836],"r":null,"name":"Virginica","marker":{"color":"#7570B3"},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[1.8384102582931519,1.154016137123108,2.197903633117676,1.4353424310684204,1.8615761995315552,2.742684841156006,0.3657931387424469,2.2947521209716797,1.9999868869781494,2.2522318363189697,1.3596206903457642,1.5973279476165771,1.877610683441162,1.2559082508087158,1.4627455472946167,1.584768295288086,1.466518759727478,2.418227195739746,3.2996416091918945,1.2595478296279907,2.030912399291992,0.9747158885002136,2.88797664642334,1.3287811279296875,1.6950550079345703,1.9478012323379517,1.1711803674697876,1.0175418853759766,1.7823790311813354,1.8574250936508179,2.4278204441070557,2.297231435775757,1.856484293937683,1.1104282140731812,1.1984589099884033,2.7894253730773926,1.5709929466247559,1.3417972326278687,0.9217373132705688,1.8458611965179443,2.0080831050872803,1.8954342603683472,1.154016137123108,2.033745050430298,1.9914753437042236,1.8642578125,1.5593571662902832,1.5160915851593018,1.3682039976119995,0.9574488401412964],"text":null},{"y":[0,-1.8870872259140015,null,0,-4.616478681564331,null,0,-0.12245919555425644,null,0,-0.3347109630703926,null],"r":null,"name":"","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"line":{"color":"red"},"lon":null,"lat":null,"x":[0,2.6053285598754883,null,0,-1.346738487482071,null,0,2.9020658135414124,null,0,2.824282646179199,null],"text":null},{"y":[-1.8870872259140015,-4.616478681564331,-0.12245919555425644,-0.3347109630703926],"r":null,"name":"","fill":null,"mode":"text","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[2.6053285598754883,-1.346738487482071,2.9020658135414124,2.824282646179199],"text":["sepal-length","sepal-width","petal-length","petal-width"]}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x1"},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y1"},"title":null}, {});</script></div>
+```
+
+
+Compare this with the Python notebook's biplot:
+
+```python
+def biplot(score, coef, labels=None):
+    xs = score[:,0]
+    ys = score[:,1]
+    n = coef.shape[0]
+    plt.figure(figsize=(10, 6))
+    plt.scatter(xs, ys, c=pd.Categorical(y).codes, cmap='viridis')
+    for i in range(n):
+        plt.arrow(0, 0, coef[i,0]*5, coef[i,1]*5, color='r', alpha=0.5)
+        if labels is None:
+            plt.text(coef[i,0]*5.2, coef[i,1]*5.2, f'Var{i+1}')
+        else:
+            plt.text(coef[i,0]*5.2, coef[i,1]*5.2, labels[i])
+
+    plt.xlabel('PC1')
+    plt.ylabel('PC2')
+    plt.title('PCA Biplot of Iris Dataset')
+    plt.grid()
+
+
+# Create and show biplot
+biplot(X_pca, pca.components_.T, X.columns)
+plt.show()
+```
+
+![Python PCA Biplot](images/python-biplot.jpg)
+
+
+## Variance Analysis
+
+The final step in PCA interpretation examines the *explained variance ratio*, revealing the effectiveness of our dimensionality reduction:
+
+
+::: {.sourceClojure}
+```clojure
+(let [explained-var (seq (:explained_variance_ratio (perform-pca iris-matrix)))]
+  (-> (tc/dataset {:pc (range 1 (inc (count explained-var)))
+                   :explained-var explained-var})
+      (hanami/plot hanami/bar-chart
+                   {:=x :pc :=y :explained-var :=mark-size 70})))
+```
+:::
+
+
+
+```{=html}
+<div><script>vegaEmbed(document.currentScript.parentElement, {"encoding":{"x":{"field":"pc","type":"quantitative"},"y":{"field":"explained-var","type":"quantitative"}},"usermeta":{"embedOptions":{"renderer":"svg"}},"mark":{"type":"bar","size":70,"tooltip":true},"width":400,"background":"floralwhite","height":300,"data":{"url":"neandersolve.pca_analysis_files\/1.csv","format":{"type":"csv"}}});</script></div>
+```
+
+
+This visualization quantifies the trade-off between *dimensionality reduction* and *information retention*. The relative importance of each component guides decisions about the optimal number of dimensions to retain for subsequent analysis.
+
+
+## Validation Against Python Implementation
+
+Our analysis produces results that align with the Python implementation's output:
+
+- *Explained variance ratios* match within numerical precision
+- *Transformed data* reveals identical clustering patterns
+- *Feature loadings* show consistent relationships
+- *Geometric relationships* between data points remain unchanged
+
+While scikit-learn's PC2 shows opposite signs due to different eigendecomposition algorithms, this difference is purely mathematical and does not affect the interpretation of results. Both implementations capture the same underlying structure, with our approach providing greater insight into the computational process through explicit transformations and functional composition.
+
+
+```{=html}
+<div style="background-color:grey;height:2px;width:100%;"></div>
+```
+
+
+
+```{=html}
+<div></div>
+```

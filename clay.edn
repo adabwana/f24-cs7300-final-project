@@ -1,5 +1,5 @@
 {
- :remote-repo {:git-url "https://github.com/adabwana/f24-cs7300-final" :branch "master"}
+ :remote-repo {:git-url "https://github.com/adabwana/f24-cs7300-final-project" :branch "master"}
 ;;  :subdirs-to-sync ["notebooks" "data" "images"]
  :run-quarto true
  :quarto {:highlight-style :atom-one ;:gruvbox
